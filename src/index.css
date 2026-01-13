@@ -580,3 +580,14 @@ button.ql-underline:hover .ql-stroke {
   border-right: 1px solid #00ffcc;
   border-bottom: 1px solid #00ffcc;
 }
+
+/* Spinner Animation for License Loading */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -2,6 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
+// License Activation
+import LicenseActivation from './LicenseActivation';
+import { hasValidLicense, verifySavedLicense } from './licenseManager';
+
 // DnD Imports
 import {
   DndContext,
@@ -95,6 +99,55 @@ const SortableItem = ({ id, children, className, style }) => {
 };
 
 const App = () => {
+  // --- LICENSE STATE ---
+  const [isLicenseValid, setIsLicenseValid] = useState(null); // null = checking, true = valid, false = invalid
+  const [showLicenseScreen, setShowLicenseScreen] = useState(false);
+
+  // Check license on mount
+  useEffect(() => {
+    const checkLicense = async () => {
+      const hasLicense = await hasValidLicense(false); // Quick offline check first
+
+      if (hasLicense) {
+        setIsLicenseValid(true);
+        setShowLicenseScreen(false);
+
+        // Verify online in background (don't block UI)
+        verifySavedLicense(false).then(result => {
+          if (!result.valid) {
+            setIsLicenseValid(false);
+            setShowLicenseScreen(true);
+          }
+        });
+      } else {
+        setIsLicenseValid(false);
+        setShowLicenseScreen(true);
+      }
+    };
+
+    checkLicense();
+  }, []);
+
+  // Periodic license verification (every 24 hours)
+  useEffect(() => {
+    if (!isLicenseValid) return;
+
+    const interval = setInterval(async () => {
+      const result = await verifySavedLicense(false);
+      if (!result.valid) {
+        setIsLicenseValid(false);
+        setShowLicenseScreen(true);
+      }
+    }, 24 * 60 * 60 * 1000); // 24 hours
+
+    return () => clearInterval(interval);
+  }, [isLicenseValid]);
+
+  const handleLicenseVerified = (purchaseData) => {
+    setIsLicenseValid(true);
+    setShowLicenseScreen(false);
+  };
+
   // --- APP STATE ---
   const [activeTab, setActiveTab] = useState('habits'); // 'habits' or 'notes'
 
@@ -381,433 +434,470 @@ const App = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '60px' }}>
+    <>
+      {/* Show license activation screen if needed */}
+      {showLicenseScreen && (
+        <LicenseActivation
+          onLicenseVerified={handleLicenseVerified}
+          allowSkip={false}
+        />
+      )}
 
-      {/* Header */}
-      <header style={{ textAlign: 'center', marginBottom: '40px', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 style={{ letterSpacing: '12px', fontSize: '14px', opacity: 0.4, textTransform: 'uppercase', marginBottom: '20px' }}>
-          Human_Optimization_Interface // Saved
-        </h1>
-
-        {/* Module Switcher */}
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', padding: '5px', borderRadius: '50px', marginBottom: '30px' }}>
-          <button
-            onClick={() => setActiveTab('habits')}
-            style={{
-              background: activeTab === 'habits' ? '#00ffcc' : 'transparent',
-              color: activeTab === 'habits' ? '#000' : '#fff',
-              border: 'none', padding: '10px 30px', borderRadius: '40px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', letterSpacing: '1px', transition: 'all 0.3s'
-            }}
-          >
-            PROTOCOLS
-          </button>
-          <button
-            onClick={() => setActiveTab('notes')}
-            style={{
-              background: activeTab === 'notes' ? '#00ffcc' : 'transparent',
-              color: activeTab === 'notes' ? '#000' : '#fff',
-              border: 'none', padding: '10px 30px', borderRadius: '40px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', letterSpacing: '1px', transition: 'all 0.3s'
-            }}
-          >
-            IDEATIONS
-          </button>
+      {/* Show loading state while checking license */}
+      {isLicenseValid === null && !showLicenseScreen && (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: '20px'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid rgba(139, 92, 246, 0.3)',
+            borderTop: '4px solid #8b5cf6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '14px' }}>
+            Verifying license...
+          </p>
         </div>
+      )}
 
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <button onClick={exportData} className="fancy-button" style={{ fontSize: '10px', padding: '8px 16px' }}>
-            EXPORT SYSTEM
-          </button>
-          <label className="fancy-button" style={{ fontSize: '10px', padding: '8px 16px', display: 'inline-block' }}>
-            IMPORT SYSTEM
-            <input type="file" onChange={importData} style={{ display: 'none' }} accept=".json" />
-          </label>
-        </div>
+      {/* Main app content - only show if license is valid */}
+      {isLicenseValid && (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '60px' }}>
 
-        {activeTab === 'habits' && (
-          <form onSubmit={addHabit} style={{ display: 'flex', alignItems: 'center' }}>
-            <input
-              type="text"
-              className="fancy-input"
-              placeholder="Initialize New Protocol..."
-              value={newHabitName}
-              onChange={(e) => setNewHabitName(e.target.value)}
-            />
-            <button type="submit" className="fancy-button">
-              Initialize
-            </button>
-          </form>
-        )}
+          {/* Header */}
+          <header style={{ textAlign: 'center', marginBottom: '40px', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h1 style={{ letterSpacing: '12px', fontSize: '14px', opacity: 0.4, textTransform: 'uppercase', marginBottom: '20px' }}>
+              Human_Optimization_Interface // Saved
+            </h1>
 
-        {activeTab === 'notes' && (
-          <button onClick={addNote} className="fancy-button" style={{ width: '300px' }}>
-            + CREATE NEW CANVAS
-          </button>
-        )}
-      </header>
-
-      {/* --- CONTENT AREA --- */}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-
-        {/* HABITS VIEW */}
-        {activeTab === 'habits' && (
-          <SortableContext items={habits.map(h => h.id)} strategy={rectSortingStrategy}>
-            <div className="bento-grid">
-              {habits.map((habit) => {
-                const todayIdx = getTodayIndex();
-                const recentHistory = habit.history.slice(Math.max(0, todayIdx - 13), todayIdx + 1);
-
-                return (
-                  <SortableItem
-                    key={habit.id}
-                    id={habit.id}
-                    className="habit-card"
-                    style={{
-                      cursor: 'default',
-                      height: '270px',
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}
-                  >
-                    <div onClick={() => { setSelectedHabit(habit); setViewMode('month'); }} style={{ flex: 1, cursor: 'pointer', marginTop: '15px' }}>
-                      <div className="glow-point" />
-                      <button className="delete-btn" onClick={(e) => deleteHabit(e, habit.id)}>✕</button>
-
-                      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px' }}>STREAK_ACTIVE</span>
-                        <button
-                          onClick={(e) => incrementStreak(e, habit.id)}
-                          style={{
-                            background: habit.history[todayIdx] ? '#00ffcc' : 'transparent',
-                            border: '1px solid #00ffcc',
-                            color: habit.history[todayIdx] ? '#000' : '#00ffcc',
-                            borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s'
-                          }}
-                        >
-                          {habit.history[todayIdx] ? '✓' : ''}
-                        </button>
-                      </header>
-
-                      <div className="streak-badge" style={{ marginBottom: 'auto' }}>{habit.streak}</div>
-                      <h3 style={{ margin: '0 0 10px 0', fontWeight: '400', color: '#fff', fontSize: '1.2rem' }}>{habit.name}</h3>
-
-                      <div style={{ height: '40px', width: '100%', opacity: 0.5 }}>
-                        <SmoothSparkline
-                          data={recentHistory}
-                          id={habit.id}
-                          strokeWidth={0.5}
-                          startIndex={Math.max(0, todayIdx - 14)}
-                          totalDays={14}
-                        />
-                      </div>
-                    </div>
-                  </SortableItem>
-                )
-              })}
+            {/* Module Switcher */}
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', padding: '5px', borderRadius: '50px', marginBottom: '30px' }}>
+              <button
+                onClick={() => setActiveTab('habits')}
+                style={{
+                  background: activeTab === 'habits' ? '#00ffcc' : 'transparent',
+                  color: activeTab === 'habits' ? '#000' : '#fff',
+                  border: 'none', padding: '10px 30px', borderRadius: '40px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', letterSpacing: '1px', transition: 'all 0.3s'
+                }}
+              >
+                PROTOCOLS
+              </button>
+              <button
+                onClick={() => setActiveTab('notes')}
+                style={{
+                  background: activeTab === 'notes' ? '#00ffcc' : 'transparent',
+                  color: activeTab === 'notes' ? '#000' : '#fff',
+                  border: 'none', padding: '10px 30px', borderRadius: '40px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', letterSpacing: '1px', transition: 'all 0.3s'
+                }}
+              >
+                IDEATIONS
+              </button>
             </div>
-          </SortableContext>
-        )}
 
-        {/* NOTES VIEW */}
-        {activeTab === 'notes' && (
-          <SortableContext items={notes.map(n => n.id)} strategy={rectSortingStrategy}>
-            <div className="notes-grid">
-              {notes.map(note => (
-                <SortableItem
-                  key={note.id}
-                  id={note.id}
-                  className="note-card"
-                  style={{}}
-                >
-                  <div style={{ marginTop: '15px', height: '100%', display: 'flex', flexDirection: 'column' }}> {/* Push content down below handle */}
-                    <div className="note-header">
-                      <input
-                        type="text"
-                        className="note-title-input"
-                        placeholder="Untitled Canvas"
-                        value={note.title}
-                        spellCheck={false}
-                        onChange={(e) => updateNote(note.id, 'title', e.target.value)}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+              <button onClick={exportData} className="fancy-button" style={{ fontSize: '10px', padding: '8px 16px' }}>
+                EXPORT SYSTEM
+              </button>
+              <label className="fancy-button" style={{ fontSize: '10px', padding: '8px 16px', display: 'inline-block' }}>
+                IMPORT SYSTEM
+                <input type="file" onChange={importData} style={{ display: 'none' }} accept=".json" />
+              </label>
+            </div>
+
+            {activeTab === 'habits' && (
+              <form onSubmit={addHabit} style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  className="fancy-input"
+                  placeholder="Initialize New Protocol..."
+                  value={newHabitName}
+                  onChange={(e) => setNewHabitName(e.target.value)}
+                />
+                <button type="submit" className="fancy-button">
+                  Initialize
+                </button>
+              </form>
+            )}
+
+            {activeTab === 'notes' && (
+              <button onClick={addNote} className="fancy-button" style={{ width: '300px' }}>
+                + CREATE NEW CANVAS
+              </button>
+            )}
+          </header>
+
+          {/* --- CONTENT AREA --- */}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+
+            {/* HABITS VIEW */}
+            {activeTab === 'habits' && (
+              <SortableContext items={habits.map(h => h.id)} strategy={rectSortingStrategy}>
+                <div className="bento-grid">
+                  {habits.map((habit) => {
+                    const todayIdx = getTodayIndex();
+                    const recentHistory = habit.history.slice(Math.max(0, todayIdx - 13), todayIdx + 1);
+
+                    return (
+                      <SortableItem
+                        key={habit.id}
+                        id={habit.id}
+                        className="habit-card"
+                        style={{
+                          cursor: 'default',
+                          height: '270px',
+                          display: 'flex',
+                          flexDirection: 'column'
+                        }}
+                      >
+                        <div onClick={() => { setSelectedHabit(habit); setViewMode('month'); }} style={{ flex: 1, cursor: 'pointer', marginTop: '15px' }}>
+                          <div className="glow-point" />
+                          <button className="delete-btn" onClick={(e) => deleteHabit(e, habit.id)}>✕</button>
+
+                          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px' }}>STREAK_ACTIVE</span>
+                            <button
+                              onClick={(e) => incrementStreak(e, habit.id)}
+                              style={{
+                                background: habit.history[todayIdx] ? '#00ffcc' : 'transparent',
+                                border: '1px solid #00ffcc',
+                                color: habit.history[todayIdx] ? '#000' : '#00ffcc',
+                                borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s'
+                              }}
+                            >
+                              {habit.history[todayIdx] ? '✓' : ''}
+                            </button>
+                          </header>
+
+                          <div className="streak-badge" style={{ marginBottom: 'auto' }}>{habit.streak}</div>
+                          <h3 style={{ margin: '0 0 10px 0', fontWeight: '400', color: '#fff', fontSize: '1.2rem' }}>{habit.name}</h3>
+
+                          <div style={{ height: '40px', width: '100%', opacity: 0.5 }}>
+                            <SmoothSparkline
+                              data={recentHistory}
+                              id={habit.id}
+                              strokeWidth={0.5}
+                              startIndex={Math.max(0, todayIdx - 14)}
+                              totalDays={14}
+                            />
+                          </div>
+                        </div>
+                      </SortableItem>
+                    )
+                  })}
+                </div>
+              </SortableContext>
+            )}
+
+            {/* NOTES VIEW */}
+            {activeTab === 'notes' && (
+              <SortableContext items={notes.map(n => n.id)} strategy={rectSortingStrategy}>
+                <div className="notes-grid">
+                  {notes.map(note => (
+                    <SortableItem
+                      key={note.id}
+                      id={note.id}
+                      className="note-card"
+                      style={{}}
+                    >
+                      <div style={{ marginTop: '15px', height: '100%', display: 'flex', flexDirection: 'column' }}> {/* Push content down below handle */}
+                        <div className="note-header">
+                          <input
+                            type="text"
+                            className="note-title-input"
+                            placeholder="Untitled Canvas"
+                            value={note.title}
+                            spellCheck={false}
+                            onChange={(e) => updateNote(note.id, 'title', e.target.value)}
+                          />
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button
+                              className={`note-icon-btn ${!note.wrap ? 'active' : ''}`}
+                              onClick={() => updateNote(note.id, 'wrap', !note.wrap)}
+                              title={note.wrap ? "Disable Wrapping" : "Enable Wrapping"}
+                            >
+                              {note.wrap ? '≡' : '→'}
+                            </button>
+                            <button
+                              className="note-icon-btn"
+                              onClick={() => setFullScreenNoteId(note.id)}
+                              title="Full Screen"
+                            >
+                              ⤢
+                            </button>
+                            <button className="note-icon-btn delete-hover" onClick={() => deleteNote(note.id)}>✕</button>
+                          </div>
+                        </div>
+                        <div className={`note-editor ${!note.wrap ? 'nowrap-mode' : ''}`}>
+                          <ReactQuill
+                            theme="snow"
+                            value={note.content}
+                            onChange={(content) => updateNote(note.id, 'content', content)}
+                            placeholder="Start ideating..."
+                            modules={{
+                              toolbar: [
+                                [{ 'header': [1, 2, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                ['clean']
+                              ],
+                            }}
+                            preserveWhitespace
+                          />
+                        </div>
+                      </div>
+                    </SortableItem>
+                  ))}
+                </div>
+              </SortableContext>
+            )}
+          </DndContext>
+
+          {/* Habit Details Modal */}
+          {selectedHabit && currentMetrics && (
+            <div className="modal-overlay" onClick={() => setSelectedHabit(null)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <button className="close-button" onClick={() => setSelectedHabit(null)}>✕</button>
+
+                <header style={{ marginBottom: '30px' }}>
+                  <h2 style={{ fontSize: '2.5rem', margin: '0', background: 'linear-gradient(90deg, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    {selectedHabit.name}
+                  </h2>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <p style={{ color: '#00ffcc', letterSpacing: '2px', fontSize: '12px', textTransform: 'uppercase', margin: 0, marginRight: '10px' }}>
+                        {getPeriodLabel()}
+                      </p>
+
+                      {viewMode === 'month' && (
+                        <select
+                          className="fancy-select"
+                          value={selectedMonth}
+                          onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                        >
+                          {MONTH_NAMES.map((m, i) => (
+                            <option key={i} value={i}>{m}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      {viewMode === 'week' && (
+                        <select
+                          className="fancy-select"
+                          value={selectedWeek}
+                          onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
+                        >
+                          {Array.from({ length: 53 }, (_, i) => (
+                            <option key={i} value={i}>{getWeekRangeLabel(i)}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    <div className="time-tabs">
+                      {['week', 'month', 'year'].map(mode => (
+                        <button
+                          key={mode}
+                          className={`tab-btn ${viewMode === mode ? 'active' : ''}`}
+                          onClick={() => setViewMode(mode)}
+                        >
+                          {mode.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </header>
+
+                <div className="stats-row">
+                  <div className="stat-item">
+                    <span className="stat-label">CONSISTENCY ({currentMetrics.elapsed} ELAPSED DAYS)</span>
+                    <span className="stat-value">{currentMetrics.percentage}%</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">COMPLETED DAYS</span>
+                    <span className="stat-value">{currentMetrics.completed} / {currentMetrics.total}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">BEST STREAK (PERIOD)</span>
+                    <span className="stat-value">{currentMetrics.maxStreak} DAYS</span>
+                  </div>
+                </div>
+
+                <div style={{ height: '250px', width: '100%', marginBottom: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  {(() => {
+                    const { start, end } = getVisibleRange(viewMode);
+                    const today = getTodayIndex();
+                    // Limit the graph to today
+                    const effectiveEnd = Math.min(end, today + 1);
+                    const graphData = selectedHabit.history.slice(start, effectiveEnd);
+                    const totalDays = end - start;
+
+                    return (
+                      <SmoothSparkline
+                        data={graphData}
+                        id={`expanded-${selectedHabit.id}`}
+                        strokeWidth={0.4}
+                        startIndex={start}
+                        totalDays={totalDays}
+                        interactive={true}
                       />
-                      <div style={{ display: 'flex', gap: '5px' }}>
+                    );
+                  })()}
+                </div>
+
+                <h3 style={{ fontSize: '14px', opacity: 0.6, letterSpacing: '2px', marginTop: '40px' }}>HISTORY LOG</h3>
+                <div className="history-grid" style={{
+                  gridTemplateColumns: `repeat(auto-fill, minmax(${viewMode === 'year' ? '12px' : '30px'}, 1fr))`,
+                  gap: viewMode === 'year' ? '4px' : '8px'
+                }}>
+                  {getVisibleData(selectedHabit.history, viewMode).map((completed, i) => {
+                    const { start } = getVisibleRange(viewMode);
+                    const absoluteIndex = start + i;
+                    const isFuture = absoluteIndex > getTodayIndex();
+
+                    return (
+                      <div
+                        key={absoluteIndex}
+                        className={`history-day ${completed ? 'completed' : ''}`}
+                        style={{ opacity: isFuture ? 0.2 : 1, cursor: isFuture ? 'default' : 'pointer' }}
+                        onClick={() => !isFuture && toggleHistory(selectedHabit.id, absoluteIndex)}
+                        title={`${getDateLabel(absoluteIndex)}${isFuture ? ' (Future)' : ''}: ${completed ? 'Completed' : 'Missed'}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Full Screen Note Modal */}
+          {fullScreenNoteId && (
+            <div className="modal-overlay" onClick={() => setFullScreenNoteId(null)}>
+              <div
+                className="modal-content full-screen-note"
+                onClick={e => e.stopPropagation()}
+                style={{ width: '90%', height: '90vh', maxWidth: 'none', display: 'flex', flexDirection: 'column', padding: '0' }}
+              >
+                {(() => {
+                  const note = notes.find(n => n.id === fullScreenNoteId);
+                  if (!note) return null;
+                  return (
+                    <>
+                      <div className="note-header" style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                        <input
+                          type="text"
+                          className="note-title-input"
+                          style={{ fontSize: '24px' }}
+                          placeholder="Untitled Canvas"
+                          value={note.title}
+                          spellCheck={false}
+                          onChange={(e) => updateNote(note.id, 'title', e.target.value)}
+                        />
                         <button
                           className={`note-icon-btn ${!note.wrap ? 'active' : ''}`}
+                          style={{ fontSize: '20px', marginLeft: '10px' }}
                           onClick={() => updateNote(note.id, 'wrap', !note.wrap)}
                           title={note.wrap ? "Disable Wrapping" : "Enable Wrapping"}
                         >
                           {note.wrap ? '≡' : '→'}
                         </button>
-                        <button
-                          className="note-icon-btn"
-                          onClick={() => setFullScreenNoteId(note.id)}
-                          title="Full Screen"
-                        >
-                          ⤢
-                        </button>
-                        <button className="note-icon-btn delete-hover" onClick={() => deleteNote(note.id)}>✕</button>
+                        <button className="close-button" style={{ position: 'relative', top: 'auto', right: 'auto', marginLeft: '20px' }} onClick={() => setFullScreenNoteId(null)}>✕</button>
                       </div>
-                    </div>
-                    <div className={`note-editor ${!note.wrap ? 'nowrap-mode' : ''}`}>
-                      <ReactQuill
-                        theme="snow"
-                        value={note.content}
-                        onChange={(content) => updateNote(note.id, 'content', content)}
-                        placeholder="Start ideating..."
-                        modules={{
-                          toolbar: [
-                            [{ 'header': [1, 2, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                            ['clean']
-                          ],
-                        }}
-                        preserveWhitespace
-                      />
-                    </div>
-                  </div>
-                </SortableItem>
-              ))}
+                      <div className={`note-editor ${!note.wrap ? 'nowrap-mode' : ''}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <ReactQuill
+                          theme="snow"
+                          value={note.content}
+                          onChange={(content) => updateNote(note.id, 'content', content)}
+                          placeholder="Start ideating..."
+                          modules={{
+                            toolbar: [
+                              [{ 'header': [1, 2, false] }],
+                              ['bold', 'italic', 'underline', 'strike'],
+                              [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                              ['clean']
+                            ],
+                            keyboard: {
+                              bindings: {
+                                // Default bindings are usually sufficient
+                              }
+                            }
+                          }}
+                          style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                        />
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
-          </SortableContext>
-        )}
-      </DndContext>
+          )}
 
-      {/* Habit Details Modal */}
-      {selectedHabit && currentMetrics && (
-        <div className="modal-overlay" onClick={() => setSelectedHabit(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="close-button" onClick={() => setSelectedHabit(null)}>✕</button>
-
-            <header style={{ marginBottom: '30px' }}>
-              <h2 style={{ fontSize: '2.5rem', margin: '0', background: 'linear-gradient(90deg, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {selectedHabit.name}
-              </h2>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <p style={{ color: '#00ffcc', letterSpacing: '2px', fontSize: '12px', textTransform: 'uppercase', margin: 0, marginRight: '10px' }}>
-                    {getPeriodLabel()}
-                  </p>
-
-                  {viewMode === 'month' && (
-                    <select
-                      className="fancy-select"
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    >
-                      {MONTH_NAMES.map((m, i) => (
-                        <option key={i} value={i}>{m}</option>
-                      ))}
-                    </select>
-                  )}
-
-                  {viewMode === 'week' && (
-                    <select
-                      className="fancy-select"
-                      value={selectedWeek}
-                      onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
-                    >
-                      {Array.from({ length: 53 }, (_, i) => (
-                        <option key={i} value={i}>{getWeekRangeLabel(i)}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                <div className="time-tabs">
-                  {['week', 'month', 'year'].map(mode => (
-                    <button
-                      key={mode}
-                      className={`tab-btn ${viewMode === mode ? 'active' : ''}`}
-                      onClick={() => setViewMode(mode)}
-                    >
-                      {mode.toUpperCase()}
-                    </button>
-                  ))}
+          {/* Delete Confirmation Modal (Habits) */}
+          {habitToDelete && (
+            <div className="modal-overlay" onClick={() => setHabitToDelete(null)}>
+              <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                <h3 style={{ marginBottom: '20px', color: '#fff' }}>Delete Protocol?</h3>
+                <p style={{ marginBottom: '30px', opacity: 0.7, color: '#fff' }}>
+                  Are you sure you want to delete this habit? <br />This action cannot be undone.
+                </p>
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => setHabitToDelete(null)}
+                    className="fancy-button"
+                    style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#fff', background: 'transparent' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDeleteHabit}
+                    className="fancy-button"
+                    style={{ borderColor: '#ff4444', color: '#ff4444', background: 'rgba(255,68,68,0.1)' }}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
-            </header>
+            </div>
+          )}
 
-            <div className="stats-row">
-              <div className="stat-item">
-                <span className="stat-label">CONSISTENCY ({currentMetrics.elapsed} ELAPSED DAYS)</span>
-                <span className="stat-value">{currentMetrics.percentage}%</span>
+          {/* Delete Confirmation Modal (Notes) */}
+          {noteToDelete && (
+            <div className="modal-overlay" onClick={() => setNoteToDelete(null)}>
+              <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                <h3 style={{ marginBottom: '20px', color: '#fff' }}>Delete Canvas?</h3>
+                <p style={{ marginBottom: '30px', opacity: 0.7, color: '#fff' }}>
+                  Are you sure you want to delete this note? <br />This action cannot be undone.
+                </p>
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => setNoteToDelete(null)}
+                    className="fancy-button"
+                    style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#fff', background: 'transparent' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDeleteNote}
+                    className="fancy-button"
+                    style={{ borderColor: '#ff4444', color: '#ff4444', background: 'rgba(255,68,68,0.1)' }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">COMPLETED DAYS</span>
-                <span className="stat-value">{currentMetrics.completed} / {currentMetrics.total}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">BEST STREAK (PERIOD)</span>
-                <span className="stat-value">{currentMetrics.maxStreak} DAYS</span>
-              </div>
             </div>
-
-            <div style={{ height: '250px', width: '100%', marginBottom: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              {(() => {
-                const { start, end } = getVisibleRange(viewMode);
-                const today = getTodayIndex();
-                // Limit the graph to today
-                const effectiveEnd = Math.min(end, today + 1);
-                const graphData = selectedHabit.history.slice(start, effectiveEnd);
-                const totalDays = end - start;
-
-                return (
-                  <SmoothSparkline
-                    data={graphData}
-                    id={`expanded-${selectedHabit.id}`}
-                    strokeWidth={0.4}
-                    startIndex={start}
-                    totalDays={totalDays}
-                    interactive={true}
-                  />
-                );
-              })()}
-            </div>
-
-            <h3 style={{ fontSize: '14px', opacity: 0.6, letterSpacing: '2px', marginTop: '40px' }}>HISTORY LOG</h3>
-            <div className="history-grid" style={{
-              gridTemplateColumns: `repeat(auto-fill, minmax(${viewMode === 'year' ? '12px' : '30px'}, 1fr))`,
-              gap: viewMode === 'year' ? '4px' : '8px'
-            }}>
-              {getVisibleData(selectedHabit.history, viewMode).map((completed, i) => {
-                const { start } = getVisibleRange(viewMode);
-                const absoluteIndex = start + i;
-                const isFuture = absoluteIndex > getTodayIndex();
-
-                return (
-                  <div
-                    key={absoluteIndex}
-                    className={`history-day ${completed ? 'completed' : ''}`}
-                    style={{ opacity: isFuture ? 0.2 : 1, cursor: isFuture ? 'default' : 'pointer' }}
-                    onClick={() => !isFuture && toggleHistory(selectedHabit.id, absoluteIndex)}
-                    title={`${getDateLabel(absoluteIndex)}${isFuture ? ' (Future)' : ''}: ${completed ? 'Completed' : 'Missed'}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
+          )}
         </div>
       )}
-
-      {/* Full Screen Note Modal */}
-      {fullScreenNoteId && (
-        <div className="modal-overlay" onClick={() => setFullScreenNoteId(null)}>
-          <div
-            className="modal-content full-screen-note"
-            onClick={e => e.stopPropagation()}
-            style={{ width: '90%', height: '90vh', maxWidth: 'none', display: 'flex', flexDirection: 'column', padding: '0' }}
-          >
-            {(() => {
-              const note = notes.find(n => n.id === fullScreenNoteId);
-              if (!note) return null;
-              return (
-                <>
-                  <div className="note-header" style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <input
-                      type="text"
-                      className="note-title-input"
-                      style={{ fontSize: '24px' }}
-                      placeholder="Untitled Canvas"
-                      value={note.title}
-                      spellCheck={false}
-                      onChange={(e) => updateNote(note.id, 'title', e.target.value)}
-                    />
-                    <button
-                      className={`note-icon-btn ${!note.wrap ? 'active' : ''}`}
-                      style={{ fontSize: '20px', marginLeft: '10px' }}
-                      onClick={() => updateNote(note.id, 'wrap', !note.wrap)}
-                      title={note.wrap ? "Disable Wrapping" : "Enable Wrapping"}
-                    >
-                      {note.wrap ? '≡' : '→'}
-                    </button>
-                    <button className="close-button" style={{ position: 'relative', top: 'auto', right: 'auto', marginLeft: '20px' }} onClick={() => setFullScreenNoteId(null)}>✕</button>
-                  </div>
-                  <div className={`note-editor ${!note.wrap ? 'nowrap-mode' : ''}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <ReactQuill
-                      theme="snow"
-                      value={note.content}
-                      onChange={(content) => updateNote(note.id, 'content', content)}
-                      placeholder="Start ideating..."
-                      modules={{
-                        toolbar: [
-                          [{ 'header': [1, 2, false] }],
-                          ['bold', 'italic', 'underline', 'strike'],
-                          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                          ['clean']
-                        ],
-                        keyboard: {
-                          bindings: {
-                            // Default bindings are usually sufficient
-                          }
-                        }
-                      }}
-                      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                    />
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal (Habits) */}
-      {habitToDelete && (
-        <div className="modal-overlay" onClick={() => setHabitToDelete(null)}>
-          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '20px', color: '#fff' }}>Delete Protocol?</h3>
-            <p style={{ marginBottom: '30px', opacity: 0.7, color: '#fff' }}>
-              Are you sure you want to delete this habit? <br />This action cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button
-                onClick={() => setHabitToDelete(null)}
-                className="fancy-button"
-                style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#fff', background: 'transparent' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteHabit}
-                className="fancy-button"
-                style={{ borderColor: '#ff4444', color: '#ff4444', background: 'rgba(255,68,68,0.1)' }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal (Notes) */}
-      {noteToDelete && (
-        <div className="modal-overlay" onClick={() => setNoteToDelete(null)}>
-          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '20px', color: '#fff' }}>Delete Canvas?</h3>
-            <p style={{ marginBottom: '30px', opacity: 0.7, color: '#fff' }}>
-              Are you sure you want to delete this note? <br />This action cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button
-                onClick={() => setNoteToDelete(null)}
-                className="fancy-button"
-                style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#fff', background: 'transparent' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteNote}
-                className="fancy-button"
-                style={{ borderColor: '#ff4444', color: '#ff4444', background: 'rgba(255,68,68,0.1)' }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
