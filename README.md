@@ -1,70 +1,240 @@
-# Getting Started with Create React App
+# HabitOS - Human Optimization Interface
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> A secure, privacy-focused habit tracking application with lifetime license support.
 
-## Available Scripts
+![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Security](https://img.shields.io/badge/security-hardened-green)
+![License](https://img.shields.io/badge/license-proprietary-red)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## 🚀 Quick Start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### For Users
+1. Download HabitOS from the official website
+2. Install and run the application
+3. Start your 10-day free trial or enter your license key
+4. Begin tracking your habits!
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### For Developers
 
-### `npm test`
+**⚠️ IMPORTANT: This app requires a backend server for license verification**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+# 1. Start Backend (Terminal 1)
+cd backend
+npm install
+cp .env.example .env
+# Edit .env and add your GUMROAD_PRODUCT_ID
+npm run dev
 
-### `npm run build`
+# 2. Start Frontend (Terminal 2)
+cd ..
+npm install
+cp .env.example .env.local
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+📖 **Full Setup Guide:** [QUICKSTART.md](./QUICKSTART.md)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🔒 Security Features
 
-### `npm run eject`
+This application follows industry best practices for security:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- ✅ **No API keys in frontend** - All sensitive data on backend
+- ✅ **Secure license verification** - Server-side validation only
+- ✅ **Rate limiting** - Prevents abuse (10 attempts/hour)
+- ✅ **CORS protection** - Configured for specific origins
+- ✅ **Environment variables** - No hardcoded secrets
+- ✅ **Separate payment processing** - Handled on landing page
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+📖 **Security Documentation:** [README_SECURITY.md](./README_SECURITY.md)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📁 Project Structure
 
-## Learn More
+```
+HabitOS/
+├── backend/              # Secure API server (Node.js/Express)
+│   ├── server.js        # License verification endpoints
+│   ├── package.json     # Backend dependencies
+│   └── .env.example     # Environment template
+│
+├── src/                 # Frontend (React)
+│   ├── App.js          # Main application
+│   ├── Onboarding.js   # User onboarding flow
+│   └── licenseManager.js # License management
+│
+├── public/             # Static assets
+└── build/              # Production build
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🎯 Features
 
-### Code Splitting
+- **Habit Tracking** - Track unlimited habits with visual calendar
+- **Streak Counting** - Automatic streak calculation
+- **Notes/Ideation** - Rich text editor for notes
+- **Data Export/Import** - Backup and restore your data
+- **10-Day Free Trial** - Full access, no credit card required
+- **Lifetime License** - One-time payment, lifetime updates
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## 🛠️ Tech Stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Frontend
+- React 19
+- React Quill (Rich text editor)
+- DnD Kit (Drag and drop)
+- Local Storage (Data persistence)
 
-### Making a Progressive Web App
+### Backend
+- Node.js
+- Express.js
+- Helmet.js (Security)
+- Express Rate Limit
+- CORS
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## 📝 Available Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Frontend
 
-### Deployment
+```bash
+npm start          # Start development server (port 3000)
+npm run build      # Build for production
+npm test           # Run tests
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Backend
 
-### `npm run build` fails to minify
+```bash
+cd backend
+npm run dev        # Start with nodemon (auto-reload)
+npm start          # Start production server
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+## 🌐 Deployment
+
+### Backend (Render/Railway/Heroku)
+1. Push backend code to GitHub
+2. Connect to hosting platform
+3. Set environment variables (see `.env.example`)
+4. Deploy!
+
+### Frontend (Netlify/Vercel)
+1. Update `.env.production` with backend URL
+2. Run `npm run build`
+3. Deploy `build/` folder
+
+📖 **Deployment Guide:** [README_SECURITY.md#deployment](./README_SECURITY.md#deployment)
+
+---
+
+## 🔐 Environment Variables
+
+### Backend (.env)
+```env
+GUMROAD_PRODUCT_ID=your_product_id
+PORT=3001
+NODE_ENV=production
+ALLOWED_ORIGINS=https://your-app.com
+JWT_SECRET=random_secure_string
+```
+
+### Frontend (.env.local)
+```env
+REACT_APP_BACKEND_URL=http://localhost:3001
+REACT_APP_LANDING_PAGE_URL=https://your-landing-page.com
+```
+
+---
+
+## 📚 Documentation
+
+- **[QUICKSTART.md](./QUICKSTART.md)** - Get started in 5 minutes
+- **[README_SECURITY.md](./README_SECURITY.md)** - Complete security guide
+- **[REFACTORING_SUMMARY.md](./REFACTORING_SUMMARY.md)** - What changed in v2.0
+- **[DEPRECATED_PAYMENT_DOCS.md](./DEPRECATED_PAYMENT_DOCS.md)** - Old docs (don't use)
+
+---
+
+## 🐛 Troubleshooting
+
+### Backend won't start
+- Check if port 3001 is available
+- Verify `.env` file exists with correct values
+- Run `npm install` in backend directory
+
+### Frontend can't connect to backend
+- Ensure backend is running on port 3001
+- Check `REACT_APP_BACKEND_URL` in `.env.local`
+- Verify CORS settings in backend
+
+### License verification fails
+- Check `GUMROAD_PRODUCT_ID` is correct
+- Verify internet connection
+- Check backend logs for errors
+
+📖 **More Help:** [README_SECURITY.md#troubleshooting](./README_SECURITY.md#troubleshooting)
+
+---
+
+## 🔄 Version History
+
+### v2.0.0 (2026-01-15) - Security Hardened
+- ✅ Complete security refactoring
+- ✅ Backend server for license verification
+- ✅ Removed payment integrations from frontend
+- ✅ Environment variable configuration
+- ✅ Rate limiting and CORS protection
+
+### v1.0.0 (Previous)
+- Initial release with embedded payments (deprecated)
+
+---
+
+## ⚠️ Important Notes
+
+1. **Never commit `.env` files** - They contain secrets
+2. **Use HTTPS in production** - Required for security
+3. **Set up rate limiting** - Prevents abuse
+4. **Monitor backend logs** - Track errors and usage
+5. **Keep dependencies updated** - Security patches
+
+---
+
+## 📞 Support
+
+For issues or questions:
+1. Check documentation in this repository
+2. Review backend logs for errors
+3. Test API endpoints directly
+4. Verify environment variables
+
+---
+
+## 📄 License
+
+Proprietary software. License required for use.
+
+Purchase a license at: [Your Landing Page URL]
+
+---
+
+## 🙏 Credits
+
+Built with ❤️ using React, Node.js, and modern web technologies.
+
+---
+
+**Last Updated:** 2026-01-15  
+**Version:** 2.0.0 (Security Hardened)

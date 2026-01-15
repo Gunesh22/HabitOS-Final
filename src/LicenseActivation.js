@@ -100,8 +100,9 @@ function LicenseActivation({ onLicenseVerified, allowSkip = false }) {
     };
 
     const handlePurchase = () => {
-        // Open Gumroad product page - Consistency Tracker
-        window.open('https://guneshg.gumroad.com/l/madcgz', '_blank');
+        // Redirect to landing page where all payments are handled securely
+        const LANDING_PAGE_URL = process.env.REACT_APP_LANDING_PAGE_URL || 'https://your-landing-page.com/purchase';
+        window.open(LANDING_PAGE_URL, '_blank');
     };
 
     if (savedLicense) {

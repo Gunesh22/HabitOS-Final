@@ -4,7 +4,14 @@ import 'react-quill-new/dist/quill.snow.css';
 
 // License Activation
 import LicenseActivation from './LicenseActivation';
-import { hasValidLicense, verifySavedLicense } from './licenseManager';
+import Onboarding from './Onboarding';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
+import {
+  hasValidLicense,
+  verifySavedLicense,
+  getUserProfile,
+  getTrialStatus
+} from './licenseManager';
 
 // DnD Imports
 import {
@@ -99,53 +106,61 @@ const SortableItem = ({ id, children, className, style }) => {
 };
 
 const App = () => {
-  // --- LICENSE STATE ---
-  const [isLicenseValid, setIsLicenseValid] = useState(null); // null = checking, true = valid, false = invalid
-  const [showLicenseScreen, setShowLicenseScreen] = useState(false);
+  // --- APP STATE & LICENSE ---
+  const [appState, setAppState] = useState('checking'); // 'checking' | 'app' | 'onboarding' | 'expired' | 'license_entry'
+  const [trialInfo, setTrialInfo] = useState(null);
 
-  // Check license on mount
+  // Check status on mount
   useEffect(() => {
-    const checkLicense = async () => {
-      const hasLicense = await hasValidLicense(false); // Quick offline check first
+    const checkStatus = async () => {
+      // 1. Check for valid full license
+      const hasLicense = await hasValidLicense(false);
 
       if (hasLicense) {
-        setIsLicenseValid(true);
-        setShowLicenseScreen(false);
-
-        // Verify online in background (don't block UI)
+        setAppState('app');
+        // Background verify
         verifySavedLicense(false).then(result => {
           if (!result.valid) {
-            setIsLicenseValid(false);
-            setShowLicenseScreen(true);
+            checkStatus(); // Re-evaluate if online check fails
           }
         });
+        return;
+      }
+
+      // 2. No License -> Check User Profile
+      const profile = getUserProfile();
+      if (!profile) {
+        setAppState('onboarding');
+        return;
+      }
+
+      // 3. Has Profile -> Check Trial
+      const trial = getTrialStatus();
+      setTrialInfo(trial);
+
+      if (trial.isValid) {
+        setAppState('app');
       } else {
-        setIsLicenseValid(false);
-        setShowLicenseScreen(true);
+        setAppState('expired'); // Trial expired - force license screen
       }
     };
 
-    checkLicense();
+    checkStatus();
   }, []);
 
-  // Periodic license verification (every 24 hours)
-  useEffect(() => {
-    if (!isLicenseValid) return;
-
-    const interval = setInterval(async () => {
-      const result = await verifySavedLicense(false);
-      if (!result.valid) {
-        setIsLicenseValid(false);
-        setShowLicenseScreen(true);
-      }
-    }, 24 * 60 * 60 * 1000); // 24 hours
-
-    return () => clearInterval(interval);
-  }, [isLicenseValid]);
+  const handleOnboardingComplete = () => {
+    const trial = getTrialStatus();
+    setTrialInfo(trial);
+    setAppState('app');
+  };
 
   const handleLicenseVerified = (purchaseData) => {
-    setIsLicenseValid(true);
-    setShowLicenseScreen(false);
+    setAppState('app');
+    setTrialInfo(null); // Clear trial info as they are now fully licensed
+  };
+
+  const openLicenseScreen = () => {
+    setAppState('license_entry');
   };
 
   // --- APP STATE ---
@@ -435,40 +450,33 @@ const App = () => {
 
   return (
     <>
-      {/* Show license activation screen if needed */}
-      {showLicenseScreen && (
-        <LicenseActivation
-          onLicenseVerified={handleLicenseVerified}
-          allowSkip={false}
-        />
-      )}
-
-      {/* Show loading state while checking license */}
-      {isLicenseValid === null && !showLicenseScreen && (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: '20px'
-        }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            border: '4px solid rgba(139, 92, 246, 0.3)',
-            borderTop: '4px solid #8b5cf6',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '14px' }}>
-            Verifying license...
-          </p>
+      {/* 1. LOADING */}
+      {appState === 'checking' && (
+        <div className="license-activation-overlay">
+          <div className="spinner"></div>
+          <p style={{ marginTop: 20 }}>Loading HabitOS...</p>
         </div>
       )}
 
-      {/* Main app content - only show if license is valid */}
-      {isLicenseValid && (
+      {/* 2. ONBOARDING */}
+      {appState === 'onboarding' && (
+        <Onboarding
+          onComplete={handleOnboardingComplete}
+          onLicenseActivation={openLicenseScreen}
+        />
+      )}
+
+      {/* 3. LICENSE ENTRY / EXPIRED */}
+      {(appState === 'license_entry' || appState === 'expired') && (
+        <LicenseActivation
+          onLicenseVerified={handleLicenseVerified}
+          allowSkip={false}
+          isExpiredTrial={appState === 'expired'}
+        />
+      )}
+
+      {/* 4. MAIN APP */}
+      {appState === 'app' && (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '60px' }}>
 
           {/* Header */}

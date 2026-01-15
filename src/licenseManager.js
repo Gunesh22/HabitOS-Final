@@ -1,62 +1,46 @@
 /**
  * License Manager for HabitOS
- * Handles Gumroad license key verification and management
+ * Client-side license management - All sensitive operations happen on the backend
+ * 
+ * ✅ SECURITY BEST PRACTICES:
+ * - No API keys in frontend code
+ * - All verification happens server-side
+ * - Client only stores license key and cached purchase data
+ * - Backend validates all license operations
  */
 
-const GUMROAD_API_URL = 'https://api.gumroad.com/v2/licenses/verify';
+// Backend API URL - configure based on environment
+const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
 const LICENSE_STORAGE_KEY = 'habitos_license';
-const PRODUCT_ID_STORAGE_KEY = 'habitos_product_id';
-
-// Gumroad Product ID (Fallback)
-const DEFAULT_PRODUCT_ID = 'EYXhUT8BoJz695qU3cJoDQ==';
-// Gumroad Permalink (Primary) - More reliable
-const DEFAULT_PRODUCT_PERMALINK = 'madcgz';
 
 /**
- * Verify a license key with Gumroad
+ * Verify a license key via backend API
  * @param {string} licenseKey - The license key to verify
- * @param {string} productId - Your Gumroad product ID (optional if using permalink)
+ * @param {string} productId - Deprecated, kept for compatibility
  * @param {boolean} incrementUses - Whether to increment the usage count
  * @returns {Promise<Object>} - Verification result
  */
-export async function verifyLicenseKey(licenseKey, productId = DEFAULT_PRODUCT_ID, incrementUses = false) {
-    // 🔓 MASTER KEY BYPASS (For Testing)
-    if (licenseKey.toUpperCase().includes('TEST') || licenseKey.toUpperCase().includes('SKIP')) {
-        return {
-            success: true,
-            valid: true,
-            uses: 0,
-            purchase: {
-                email: 'test@habitos.dev',
-                product_name: 'HabitOS (Dev Mode)',
-                test: true,
-                sale_timestamp: new Date().toISOString()
-            }
-        };
-    }
-
+export async function verifyLicenseKey(licenseKey, productId = null, incrementUses = false) {
     try {
-        const formData = new URLSearchParams();
-        // Gumroad explicitly requested product_id for this product
-        formData.append('product_id', DEFAULT_PRODUCT_ID);
-        formData.append('license_key', licenseKey);
-        formData.append('increment_uses_count', incrementUses.toString());
-
-        const response = await fetch(GUMROAD_API_URL, {
+        // Call backend API instead of Gumroad directly
+        const response = await fetch(`${BACKEND_API_URL}/api/license/verify`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
-            body: formData.toString(),
+            body: JSON.stringify({
+                licenseKey: licenseKey.trim(),
+                incrementUses
+            }),
         });
 
         const data = await response.json();
 
-        if (data.success) {
+        if (data.success && data.valid) {
             return {
                 success: true,
                 valid: true,
-                data: data,
+                data: data.data,
                 purchase: data.purchase,
                 uses: data.uses,
             };
@@ -64,7 +48,7 @@ export async function verifyLicenseKey(licenseKey, productId = DEFAULT_PRODUCT_I
             return {
                 success: false,
                 valid: false,
-                error: data.message || 'Invalid license key',
+                error: data.error || 'Invalid license key',
             };
         }
     } catch (error) {
@@ -72,31 +56,24 @@ export async function verifyLicenseKey(licenseKey, productId = DEFAULT_PRODUCT_I
         return {
             success: false,
             valid: false,
-            error: 'Failed to verify license. Please check your internet connection.',
+            error: 'Failed to verify license. Please check your internet connection and ensure the backend server is running.',
         };
     }
 }
-
 /**
+ * @deprecated This function is now handled by the backend
  * Check if a license is still valid (not refunded, disputed, or subscription ended)
- * @param {Object} purchaseData - Purchase data from Gumroad API
+ * @param {Object} purchaseData - Purchase data from backend
  * @returns {boolean} - Whether the license is still valid
  */
 export function isLicenseStillValid(purchaseData) {
+    // This is now validated by the backend
+    // Kept for backward compatibility
     if (!purchaseData) return false;
 
-    // Check if purchase was refunded or disputed
+    // Basic client-side check (backend does the real validation)
     if (purchaseData.refunded || purchaseData.disputed || purchaseData.chargebacked) {
         return false;
-    }
-
-    // Check subscription status if applicable
-    if (purchaseData.subscription_id) {
-        if (purchaseData.subscription_ended_at ||
-            purchaseData.subscription_cancelled_at ||
-            purchaseData.subscription_failed_at) {
-            return false;
-        }
     }
 
     return true;
@@ -141,23 +118,24 @@ export function removeLicense() {
 }
 
 /**
- * Set the product ID (useful if you have multiple products)
- * @param {string} productId - Your Gumroad product ID
+ * @deprecated Product ID is now managed securely on the backend
+ * Kept for backward compatibility
  */
 export function setProductId(productId) {
-    localStorage.setItem(PRODUCT_ID_STORAGE_KEY, productId);
+    console.warn('setProductId is deprecated - product ID is now managed on the backend');
 }
 
 /**
- * Get the product ID
- * @returns {string} - Product ID
+ * @deprecated Product ID is now managed securely on the backend
+ * Kept for backward compatibility
  */
 export function getProductId() {
-    return localStorage.getItem(PRODUCT_ID_STORAGE_KEY) || DEFAULT_PRODUCT_ID;
+    console.warn('getProductId is deprecated - product ID is now managed on the backend');
+    return null;
 }
 
 /**
- * Verify the saved license with Gumroad (for periodic checks)
+ * Verify the saved license via backend API (for periodic checks)
  * @param {boolean} incrementUses - Whether to increment usage count
  * @returns {Promise<Object>} - Verification result
  */
@@ -172,33 +150,44 @@ export async function verifySavedLicense(incrementUses = false) {
         };
     }
 
-    const result = await verifyLicenseKey(savedLicense.key, getProductId(), incrementUses);
+    try {
+        // Use backend validation endpoint
+        const response = await fetch(`${BACKEND_API_URL}/api/license/validate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                licenseKey: savedLicense.key
+            }),
+        });
 
-    if (result.success && result.valid) {
-        // Check if license is still valid (not refunded, etc.)
-        const stillValid = isLicenseStillValid(result.purchase);
+        const result = await response.json();
 
-        if (!stillValid) {
-            removeLicense();
+        if (result.success && result.valid) {
+            // Update saved license data with latest info
+            saveLicense(savedLicense.key, result.purchase);
+
             return {
-                success: false,
-                valid: false,
-                error: 'License is no longer valid (refunded, disputed, or subscription ended)',
+                success: true,
+                valid: true,
+                data: result.data,
+                purchase: result.purchase,
             };
+        } else {
+            // License is no longer valid, remove it
+            removeLicense();
+            return result;
         }
-
-        // Update saved license data
-        saveLicense(savedLicense.key, result.purchase);
-
+    } catch (error) {
+        console.error('License validation error:', error);
+        // On network error, don't remove license - allow offline usage
         return {
-            success: true,
-            valid: true,
-            data: result.data,
-            purchase: result.purchase,
+            success: false,
+            valid: false,
+            error: 'Failed to validate license. Please check your internet connection.',
+            offline: true
         };
-    } else {
-        removeLicense();
-        return result;
     }
 }
 
@@ -248,4 +237,74 @@ export function isValidLicenseKeyFormat(key) {
     // Gumroad license keys are typically 32 characters (hex)
     // Format: XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX
     return /^[A-F0-9]{32}$/i.test(cleanKey);
+}
+
+// --- USER PROFILE & TRIAL LOGIC ---
+
+const USER_PROFILE_KEY = 'habitos_user_profile';
+const TRIAL_DATA_KEY = 'habitos_trial_data';
+const TRIAL_DURATION_DAYS = 10;
+
+/**
+ * Save user profile details
+ * @param {string} name 
+ * @param {string} email 
+ * @param {string} country 
+ */
+export function saveUserProfile(name, email, country) {
+    const profile = { name, email, country, joinedAt: new Date().toISOString() };
+    localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+}
+
+/**
+ * Get user profile
+ */
+export function getUserProfile() {
+    try {
+        return JSON.parse(localStorage.getItem(USER_PROFILE_KEY));
+    } catch (e) { return null; }
+}
+
+/**
+ * Start the 10-day free trial
+ */
+export function startTrial() {
+    const trialData = {
+        startDate: new Date().toISOString(),
+        isActive: true
+    };
+    localStorage.setItem(TRIAL_DATA_KEY, JSON.stringify(trialData));
+}
+
+/**
+ * Check if the user is currently in a valid trial period
+ * @returns {object} { isValid: boolean, expired: boolean, daysLeft: number }
+ */
+export function getTrialStatus() {
+    try {
+        const data = JSON.parse(localStorage.getItem(TRIAL_DATA_KEY));
+        if (!data || !data.startDate) {
+            return { isValid: false, expired: false, daysLeft: 0, hasStarted: false };
+        }
+
+        const start = new Date(data.startDate);
+        const now = new Date();
+        // Calculate difference in milliseconds
+        const diffTime = now - start;
+        // Convert to days
+        const exactDays = diffTime / (1000 * 60 * 60 * 24);
+
+        if (exactDays > TRIAL_DURATION_DAYS) {
+            return { isValid: false, expired: true, daysLeft: 0, hasStarted: true };
+        }
+
+        return {
+            isValid: true,
+            expired: false,
+            daysLeft: Math.ceil(TRIAL_DURATION_DAYS - exactDays),
+            hasStarted: true
+        };
+    } catch (e) {
+        return { isValid: false, expired: false, daysLeft: 0, hasStarted: false };
+    }
 }

@@ -591,3 +591,43 @@ button.ql-underline:hover .ql-stroke {
     transform: rotate(360deg);
   }
 }
+
+/* Trial Banner */
+.trial-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, rgba(0, 255, 204, 0.1) 0%, rgba(0, 153, 255, 0.1) 100%);
+  border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.trial-banner span {
+  color: #00ffcc;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.btn-buy-small {
+  background: linear-gradient(135deg, #00ffcc 0%, #0099ff 100%);
+  border: none;
+  color: #000;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.btn-buy-small:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 204, 0.3);
+}
