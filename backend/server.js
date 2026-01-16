@@ -20,7 +20,11 @@ require('dotenv').config();
 const licenseService = require('./licenseService-firebase');
 
 const app = express();
+const path = require('path');
 const PORT = process.env.PORT || 3001;
+
+// Trust Proxy for Render (Required for Rate Limiting)
+app.set('trust proxy', 1);
 
 // Security Middleware
 app.use(helmet());
@@ -62,11 +66,20 @@ const licenseVerifyLimiter = rateLimit({
 
 // Health check
 app.get('/api/health', async (req, res) => {
-    // const dbConnected = await testConnection();
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
         database: 'firebase'
+    });
+});
+
+// Root route (Friendly welcome instead of 404)
+app.get('/', (req, res) => {
+    res.json({
+        service: 'HabitOS Backend',
+        status: 'running',
+        version: '2.0.0',
+        documentation: 'https://github.com/Gunesh22/HabitOS-Final'
     });
 });
 
