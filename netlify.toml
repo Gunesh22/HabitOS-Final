@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[context.production.environment]
+  REACT_APP_BACKEND_URL = "https://habitos-final.onrender.com"
+  REACT_APP_RAZORPAY_KEY_ID = "rzp_test_1DP5mmOlF5G5ag"
+  REACT_APP_GUMROAD_PRODUCT_URL = "https://gunesh22.gumroad.com/l/habitos"
+  REACT_APP_LANDING_PAGE = "landing-page-template.html"
+  # REACT_APP_GOOGLE_ANALYTICS_ID = "G-XXXXXXXXXX" # Uncomment and replace if you have a real ID
