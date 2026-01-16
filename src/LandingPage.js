@@ -4,11 +4,38 @@ import './LandingPage.css';
 const LandingPage = () => {
     const [selectedPlan, setSelectedPlan] = useState(null);
 
+    const [config, setConfig] = useState({
+        trialDays: 10,
+        priceInr: 999,
+        priceUsd: 10
+    });
+
+    // Fetch dynamic config from backend
+    React.useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+                const response = await fetch(`${backendUrl}/api/config`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setConfig({
+                        trialDays: data.TRIAL_DAYS,
+                        priceInr: data.PRICE_INR,
+                        priceUsd: data.PRICE_USD
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch config, using defaults', error);
+            }
+        };
+        fetchConfig();
+    }, []);
+
     // Razorpay Integration
     const handleRazorpayPayment = () => {
         const options = {
             key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY_ID',
-            amount: 99900, // Amount in paise (₹999)
+            amount: config.priceInr * 100, // Amount in paise
             currency: 'INR',
             name: 'HabitOS',
             description: 'Lifetime Access to HabitOS',
@@ -54,7 +81,7 @@ const LandingPage = () => {
                     productId: 'habitos-lifetime',
                     paymentId: paymentId,
                     paymentProvider: provider,
-                    amount: 999,
+                    amount: provider === 'razorpay' ? config.priceInr : config.priceUsd,
                     currency: provider === 'razorpay' ? 'INR' : 'USD',
                     maxDevices: 3
                 }),
@@ -104,7 +131,7 @@ const LandingPage = () => {
 
                     {/* Download Buttons */}
                     <div className="download-section">
-                        <h3>Download for Free - 10 Days Trial</h3>
+                        <h3>Download for Free - {config.trialDays} Days Trial</h3>
                         <div className="download-buttons">
                             <button className="download-btn windows" onClick={() => handleDownload('windows')}>
                                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -125,7 +152,7 @@ const LandingPage = () => {
                                 Download for Linux
                             </button>
                         </div>
-                        <p className="trial-info">✨ No credit card required • Full access for 10 days</p>
+                        <p className="trial-info">✨ No credit card required • Full access for {config.trialDays} days</p>
                     </div>
                 </div>
             </section>
@@ -164,7 +191,7 @@ const LandingPage = () => {
                     {/* Free Trial */}
                     <div className="pricing-card trial">
                         <div className="pricing-badge">Try it Free</div>
-                        <h3>10-Day Trial</h3>
+                        <h3>{config.trialDays}-Day Trial</h3>
                         <div className="price">
                             <span className="currency">₹</span>
                             <span className="amount">0</span>
@@ -172,7 +199,7 @@ const LandingPage = () => {
                         <ul className="features-list">
                             <li>✅ All Features Unlocked</li>
                             <li>✅ No Credit Card Required</li>
-                            <li>✅ Full Access for 10 Days</li>
+                            <li>✅ Full Access for {config.trialDays} Days</li>
                             <li>✅ Local Data Storage</li>
                         </ul>
                         <button className="cta-button secondary" onClick={() => handleDownload('windows')}>
@@ -186,7 +213,7 @@ const LandingPage = () => {
                         <h3>Lifetime Access</h3>
                         <div className="price">
                             <span className="currency">₹</span>
-                            <span className="amount">999</span>
+                            <span className="amount">{config.priceInr}</span>
                         </div>
                         <ul className="features-list">
                             <li>✨ One-time Payment</li>
