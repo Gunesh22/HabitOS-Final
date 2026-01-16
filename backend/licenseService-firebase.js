@@ -167,11 +167,15 @@ async function startTrial({ email, name, deviceId, deviceName }) {
             last_seen: now
         });
 
-        // Log
+        // Log (filter out undefined values to prevent Firestore errors)
+        const historyDetails = { email, deviceId };
+        if (name) historyDetails.name = name;
+        if (deviceName) historyDetails.deviceName = deviceName;
+
         await db.collection('license_history').add({
             license_id: licenseRef.id,
             action: 'trial_started',
-            details: { email, name, deviceId, deviceName },
+            details: historyDetails,
             created_at: now
         });
 
