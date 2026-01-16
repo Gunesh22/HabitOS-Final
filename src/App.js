@@ -481,7 +481,11 @@ const App = () => {
 
           {/* Header */}
           <header style={{ textAlign: 'center', marginBottom: '40px', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h1 style={{ letterSpacing: '12px', fontSize: '14px', opacity: 0.4, textTransform: 'uppercase', marginBottom: '20px' }}>
+            <h1
+              style={{ letterSpacing: '12px', fontSize: '14px', opacity: 0.4, textTransform: 'uppercase', marginBottom: '20px', cursor: 'pointer' }}
+              onClick={() => window.open('https://habitos.com', '_blank')}
+              title="Visit HabitOS Website"
+            >
               Human_Optimization_Interface // Saved
             </h1>
 

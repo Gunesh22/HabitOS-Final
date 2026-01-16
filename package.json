@@ -1,6 +1,10 @@
 {
   "name": "habit-os",
   "version": "0.1.0",
+  "author": {
+    "name": "HabitOS Team",
+    "email": "support@habitos.com"
+  },
   "description": "Human Optimization Interface",
   "private": true,
   "main": "public/electron.js",
@@ -14,6 +18,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^13.5.0",
+    "electron-is-dev": "^2.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-quill-new": "^3.7.0",
@@ -25,18 +30,61 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron:pack": "npm run build && electron-builder build --win"
+    "electron:dev": "concurrently \"BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && electron-builder build --win --mac --linux",
+    "electron:build:win": "npm run build && electron-builder build --win",
+    "electron:build:mac": "npm run build && electron-builder build --mac",
+    "electron:build:linux": "npm run build && electron-builder build --linux"
   },
   "build": {
-    "appId": "com.habit.os.app",
+    "appId": "com.habitos.app",
     "productName": "HabitOS",
-    "win": {
-      "target": "portable"
+    "copyright": "Copyright © 2026 HabitOS",
+    "directories": {
+      "buildResources": "public"
     },
     "files": [
       "build/**/*",
-      "public/electron.js"
-    ]
+      "public/electron.js",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/logo512.png",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/logo512.png",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "public/logo512.png",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "eslintConfig": {
     "extends": [
@@ -57,7 +105,9 @@
     ]
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "electron": "^39.2.7",
-    "electron-builder": "^26.4.0"
+    "electron-builder": "^26.4.0",
+    "wait-on": "^7.2.0"
   }
 }

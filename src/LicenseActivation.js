@@ -101,7 +101,7 @@ function LicenseActivation({ onLicenseVerified, allowSkip = false }) {
 
     const handlePurchase = () => {
         // Redirect to landing page where all payments are handled securely
-        const LANDING_PAGE_URL = process.env.REACT_APP_LANDING_PAGE_URL || 'https://your-landing-page.com/purchase';
+        const LANDING_PAGE_URL = process.env.REACT_APP_LANDING_PAGE_URL || 'file:///d:/HabitOS%20website/index.html';
         window.open(LANDING_PAGE_URL, '_blank');
     };
 

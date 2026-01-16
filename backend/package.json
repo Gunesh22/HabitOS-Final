@@ -1,7 +1,7 @@
 {
     "name": "habitos-backend",
-    "version": "1.0.0",
-    "description": "Secure backend server for HabitOS - handles all sensitive operations",
+    "version": "2.0.0",
+    "description": "Secure backend server for HabitOS - handles all sensitive operations with PostgreSQL",
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
@@ -12,7 +12,8 @@
         "habitos",
         "backend",
         "license",
-        "api"
+        "api",
+        "postgresql"
     ],
     "author": "",
     "license": "ISC",
@@ -21,7 +22,10 @@
         "dotenv": "^16.0.3",
         "express": "^4.18.2",
         "express-rate-limit": "^6.7.0",
-        "helmet": "^7.0.0"
+        "firebase-admin": "^13.6.0",
+        "helmet": "^7.0.0",
+        "pg": "^8.11.3",
+        "sqlite3": "^5.1.7"
     },
     "devDependencies": {
         "nodemon": "^2.0.22"

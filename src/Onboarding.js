@@ -14,7 +14,7 @@ import { COUNTRIES } from './currencyUtils';
  */
 
 // Landing page URL where payments are handled
-const LANDING_PAGE_URL = process.env.REACT_APP_LANDING_PAGE_URL || 'https://your-landing-page.com/purchase';
+const LANDING_PAGE_URL = process.env.REACT_APP_LANDING_PAGE_URL || 'file:///d:/HabitOS%20website/index.html';
 
 function Onboarding({ onComplete, onLicenseActivation }) {
     const [step, setStep] = useState('profile'); // 'profile' | 'offer'
@@ -124,6 +124,9 @@ function Onboarding({ onComplete, onLicenseActivation }) {
                     <div className="footer-link">
                         <button className="text-btn" onClick={handleKeyLink}>
                             Already purchased? Enter License Key
+                        </button>
+                        <button className="text-btn" onClick={() => window.open(LANDING_PAGE_URL, '_blank')} style={{ marginTop: '10px', display: 'block', margin: '10px auto' }}>
+                            Visit Website
                         </button>
                     </div>
                 </div>
