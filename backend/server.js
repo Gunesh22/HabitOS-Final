@@ -129,6 +129,32 @@ app.post('/api/license/create', async (req, res) => {
 });
 
 /**
+ * Start a free trial
+ * POST /api/license/start-trial
+ */
+app.post('/api/license/start-trial', async (req, res) => {
+    try {
+        const { email, deviceId } = req.body;
+
+        if (!email || !deviceId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email and Device ID are required'
+            });
+        }
+
+        const result = await licenseService.startTrial({ email, deviceId });
+        res.json(result);
+    } catch (error) {
+        console.error('Error starting trial:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to start trial'
+        });
+    }
+});
+
+/**
  * Verify a license key
  * POST /api/license/verify
  */

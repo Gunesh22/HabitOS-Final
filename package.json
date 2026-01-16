@@ -19,6 +19,8 @@
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^13.5.0",
     "electron-is-dev": "^2.0.0",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.7.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-quill-new": "^3.7.0",
@@ -36,7 +38,18 @@
     "electron:build:mac": "npm run build && electron-builder build --mac",
     "electron:build:linux": "npm run build && electron-builder build --linux"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gunesh22/HabitOS-Final"
+  },
   "build": {
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Gunesh22",
+        "repo": "HabitOS-Final"
+      }
+    ],
     "appId": "com.habitos.app",
     "productName": "HabitOS",
     "copyright": "Copyright © 2026 HabitOS",

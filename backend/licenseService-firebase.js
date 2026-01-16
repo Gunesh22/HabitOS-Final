@@ -107,6 +107,85 @@ async function createLicense({
 }
 
 /**
+ * Start a 10-day free trial
+ */
+async function startTrial({ email, deviceId }) {
+    try {
+        // Check if this email or device already has a trial
+        // Note: checking by deviceID is harder without a separate lookup, 
+        // effectively we check by email first.
+
+        const licensesRef = db.collection('licenses');
+        const snapshot = await licensesRef
+            .where('email', '==', email)
+            .where('status', '==', 'trial')
+            .get();
+
+        if (!snapshot.empty) {
+            // Return existing trial if found
+            const doc = snapshot.docs[0];
+            const data = doc.data();
+            // We can't return the key typically because we hash it, 
+            // but for trials maybe we regenerate or just return error "Trial already active"
+            throw new Error('Trial already active for this email');
+        }
+
+        const licenseKey = `TRIAL-${generateLicenseKey()}`;
+        const licenseKeyHash = hashLicenseKey(licenseKey);
+
+        const now = admin.firestore.Timestamp.now();
+        const expiresAt = admin.firestore.Timestamp.fromMillis(Date.now() + (10 * 24 * 60 * 60 * 1000)); // 10 days
+
+        const licenseData = {
+            license_key_hash: licenseKeyHash,
+            email,
+            product_id: 'habitos-trial',
+            payment_id: 'trial',
+            payment_provider: 'internal',
+            amount: 0,
+            currency: 'USD',
+            max_devices: 1,
+            status: 'trial',
+            created_at: now,
+            updated_at: now,
+            expires_at: expiresAt
+        };
+
+        const licenseRef = await db.collection('licenses').add(licenseData);
+
+        // Auto-activate the device
+        // We reuse activateDevice logic manually or just create the record
+        // Adding device record:
+        await db.collection('devices').add({
+            license_id: licenseRef.id,
+            device_id: deviceId,
+            device_name: 'Trial Device',
+            status: 'active',
+            activated_at: now,
+            last_seen: now
+        });
+
+        // Log
+        await db.collection('license_history').add({
+            license_id: licenseRef.id,
+            action: 'trial_started',
+            details: { email, deviceId },
+            created_at: now
+        });
+
+        return {
+            success: true,
+            licenseKey,
+            expiresAt: expiresAt.toDate()
+        };
+
+    } catch (error) {
+        console.error('Error starting trial:', error);
+        throw error;
+    }
+}
+
+/**
  * Verify a license key
  */
 async function verifyLicense(licenseKey) {
@@ -426,5 +505,6 @@ module.exports = {
     activateDevice,
     deactivateDevice,
     getLicenseDetails,
-    revokeLicense
+    revokeLicense,
+    startTrial
 };

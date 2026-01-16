@@ -46,6 +46,11 @@ function createWindow() {
         return { action: 'deny' };
     });
 
+    // Check for updates on startup (only in production)
+    if (!isDev) {
+        autoUpdater.checkForUpdatesAndNotify();
+    }
+
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
@@ -77,6 +82,59 @@ ipcMain.handle('open-external', (event, url) => {
     shell.openExternal(url);
 });
 
-// Auto-updater (optional - can be added later)
-// const { autoUpdater } = require('electron-updater');
-// autoUpdater.checkForUpdatesAndNotify();
+// ==================== AUTO UPDATER ====================
+const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
+
+// Logging
+log.transports.file.level = 'info';
+autoUpdater.logger = log;
+
+// Events
+autoUpdater.on('checking-for-update', () => {
+    log.info('Checking for update...');
+    if (mainWindow) mainWindow.webContents.send('update_status', { status: 'checking' });
+});
+
+autoUpdater.on('update-available', (info) => {
+    log.info('Update available.');
+    if (mainWindow) mainWindow.webContents.send('update_status', { status: 'available', info });
+});
+
+autoUpdater.on('update-not-available', (info) => {
+    log.info('Update not available.');
+    if (mainWindow) mainWindow.webContents.send('update_status', { status: 'not-available', info });
+});
+
+autoUpdater.on('error', (err) => {
+    log.info('Error in auto-updater. ' + err);
+    if (mainWindow) mainWindow.webContents.send('update_status', { status: 'error', error: err.message });
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    let log_message = "Download speed: " + progressObj.bytesPerSecond;
+    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+    log.info(log_message);
+    if (mainWindow) mainWindow.webContents.send('update_status', { status: 'downloading', progress: progressObj });
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+    log.info('Update downloaded');
+    if (mainWindow) mainWindow.webContents.send('update_status', { status: 'downloaded', info });
+
+    // Instantly quit and install
+    // You might want to ask the user first, but you said "hassle free"
+    // autoUpdater.quitAndInstall(); 
+});
+
+ipcMain.handle('check-for-updates', () => {
+    if (!isDev) {
+        autoUpdater.checkForUpdatesAndNotify();
+    }
+});
+
+ipcMain.handle('install-update', () => {
+    autoUpdater.quitAndInstall();
+});
+// ======================================================
