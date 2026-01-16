@@ -109,7 +109,7 @@ async function createLicense({
 /**
  * Start a 10-day free trial
  */
-async function startTrial({ email, deviceId }) {
+async function startTrial({ email, name, deviceId, deviceName }) {
     try {
         // Check if this email or device already has a trial
         // Note: checking by deviceID is harder without a separate lookup, 
@@ -139,6 +139,7 @@ async function startTrial({ email, deviceId }) {
         const licenseData = {
             license_key_hash: licenseKeyHash,
             email,
+            name: name || 'Trial User', // Save user name
             product_id: 'habitos-trial',
             payment_id: 'trial',
             payment_provider: 'internal',
@@ -159,7 +160,7 @@ async function startTrial({ email, deviceId }) {
         await db.collection('devices').add({
             license_id: licenseRef.id,
             device_id: deviceId,
-            device_name: 'Trial Device',
+            device_name: deviceName || 'Trial Device', // Use provided device name
             status: 'active',
             activated_at: now,
             last_seen: now
@@ -169,7 +170,7 @@ async function startTrial({ email, deviceId }) {
         await db.collection('license_history').add({
             license_id: licenseRef.id,
             action: 'trial_started',
-            details: { email, deviceId },
+            details: { email, name, deviceId, deviceName },
             created_at: now
         });
 

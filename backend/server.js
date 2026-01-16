@@ -134,7 +134,7 @@ app.post('/api/license/create', async (req, res) => {
  */
 app.post('/api/license/start-trial', async (req, res) => {
     try {
-        const { email, deviceId } = req.body;
+        const { email, name, deviceId, deviceName } = req.body;
 
         if (!email || !deviceId) {
             return res.status(400).json({
@@ -143,7 +143,12 @@ app.post('/api/license/start-trial', async (req, res) => {
             });
         }
 
-        const result = await licenseService.startTrial({ email, deviceId });
+        const result = await licenseService.startTrial({
+            email,
+            name,
+            deviceId,
+            deviceName
+        });
         res.json(result);
     } catch (error) {
         console.error('Error starting trial:', error);
