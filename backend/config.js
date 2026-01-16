@@ -11,7 +11,7 @@ const config = {
 
     // 💰 Pricing (Used for validation/display)
     PRICE_USD: 10.00,
-    PRICE_INR: 850.00,
+    PRICE_INR: 85.00,
 
     // 🔧 App Details
     APP_NAME: "HabitOS",
