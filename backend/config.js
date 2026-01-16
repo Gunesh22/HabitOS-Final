@@ -7,7 +7,7 @@
  */
 const config = {
     // ⏳ Trial Settings
-    TRIAL_DAYS: 10,
+    TRIAL_DAYS: 7,
 
     // 💰 Pricing (Used for validation/display)
     PRICE_USD: 10.00,
