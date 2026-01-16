@@ -83,6 +83,12 @@ app.get('/', (req, res) => {
     });
 });
 
+// Configuration endpoint
+app.get('/api/config', (req, res) => {
+    const config = require('./config');
+    res.json(config);
+});
+
 // ==================== LICENSE MANAGEMENT ====================
 
 /**

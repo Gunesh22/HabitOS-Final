@@ -6,6 +6,7 @@
 const crypto = require('crypto');
 const { db } = require('./firebase');
 const admin = require('firebase-admin');
+const config = require('./config');
 
 /**
  * Generate a secure license key
@@ -134,7 +135,7 @@ async function startTrial({ email, name, deviceId, deviceName }) {
         const licenseKeyHash = hashLicenseKey(licenseKey);
 
         const now = admin.firestore.Timestamp.now();
-        const expiresAt = admin.firestore.Timestamp.fromMillis(Date.now() + (10 * 24 * 60 * 60 * 1000)); // 10 days
+        const expiresAt = admin.firestore.Timestamp.fromMillis(Date.now() + (config.TRIAL_DAYS * 24 * 60 * 60 * 1000));
 
         const licenseData = {
             license_key_hash: licenseKeyHash,
