@@ -5,9 +5,9 @@ const LandingPage = () => {
     const [selectedPlan, setSelectedPlan] = useState(null);
 
     const [config, setConfig] = useState({
-        trialDays: 7,
-        priceInr: 1,
-        priceUsd: 10
+        trialDays: null,
+        priceInr: null,
+        priceUsd: null
     });
 
     // Fetch dynamic config from backend
