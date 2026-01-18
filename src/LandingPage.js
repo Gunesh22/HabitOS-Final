@@ -4,10 +4,11 @@ import './LandingPage.css';
 const LandingPage = () => {
     const [selectedPlan, setSelectedPlan] = useState(null);
 
+    // Initialize with safe defaults (matching backend)
     const [config, setConfig] = useState({
-        trialDays: null,
-        priceInr: null,
-        priceUsd: null
+        trialDays: 7,
+        priceInr: 1,
+        priceUsd: 10
     });
 
     // Fetch dynamic config from backend

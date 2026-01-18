@@ -39,12 +39,22 @@ function Onboarding({ onComplete, onLicenseActivation }) {
     };
 
     // Offer Handlers
-    const handleStartTrial = () => {
+    const handleStartTrial = async () => {
         setLoading(true);
-        setTimeout(() => {
-            startTrial();
-            onComplete();
-        }, 800);
+        try {
+            // Use the email entered in previous step
+            const result = await startTrial(formData.email, 'desktop-user-' + Date.now());
+
+            if (result.success) {
+                onComplete();
+            } else {
+                alert("Failed to start trial: " + (result.error || "Unknown error"));
+                setLoading(false);
+            }
+        } catch (e) {
+            alert("Connection error. Please try again.");
+            setLoading(false);
+        }
     };
 
     const handleKeyLink = () => {

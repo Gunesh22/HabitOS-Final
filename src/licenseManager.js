@@ -10,8 +10,52 @@
  */
 
 // Backend API URL - configure based on environment
-const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 'https://habitos-final.onrender.com';
 const LICENSE_STORAGE_KEY = 'habitos_license';
+
+
+
+/**
+ * Start the 10-day free trial (Server-Side)
+ * @param {string} email
+ * @param {string} deviceId
+ */
+export async function startTrial(email, deviceId) {
+    try {
+        const response = await fetch(`${BACKEND_API_URL}/api/license/start-trial`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, deviceId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Save the server-issued Trial Key as if it were a real license
+            saveLicense(data.licenseKey, {
+                email,
+                product_name: 'HabitOS Trial',
+                trial: true,
+                expiresAt: data.expiresAt
+            });
+
+            // Also keep local marker for UI
+            const trialData = {
+                startDate: new Date().toISOString(),
+                isActive: true,
+                serverKey: data.licenseKey
+            };
+            localStorage.setItem(TRIAL_DATA_KEY, JSON.stringify(trialData));
+
+            return { success: true };
+        } else {
+            return { success: false, error: data.error };
+        }
+    } catch (e) {
+        console.error("Trial start error", e);
+        return { success: false, error: "Connection failed" };
+    }
+}
 
 /**
  * Verify a license key via backend API
@@ -265,16 +309,7 @@ export function getUserProfile() {
     } catch (e) { return null; }
 }
 
-/**
- * Start the 10-day free trial
- */
-export function startTrial() {
-    const trialData = {
-        startDate: new Date().toISOString(),
-        isActive: true
-    };
-    localStorage.setItem(TRIAL_DATA_KEY, JSON.stringify(trialData));
-}
+
 
 /**
  * Check if the user is currently in a valid trial period

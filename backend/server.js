@@ -16,7 +16,6 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Import services (Firebase version)
-// const { initializeDatabase, testConnection, query } = require('./database'); // Not needed for Firebase
 const licenseService = require('./licenseService-firebase');
 
 const app = express();
