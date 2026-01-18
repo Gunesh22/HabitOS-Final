@@ -5,8 +5,8 @@ const LandingPage = () => {
     const [selectedPlan, setSelectedPlan] = useState(null);
 
     const [config, setConfig] = useState({
-        trialDays: 10,
-        priceInr: 999,
+        trialDays: 7,
+        priceInr: 1,
         priceUsd: 10
     });
 
