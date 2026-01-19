@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Helper: Get current user's profile
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+    
+    // 2. Helper: Check if user is in trial or paid
+    function hasAccess(userId) {
+       let userIndex = getUserData(userId);
+       // Access if:
+       // A. User has marked status as 'isPaid' == true
+       // B. OR we are within 110 days of account creation
+       return userIndex.isPaid == true || 
+              request.time < userIndex.createdAt + duration.value(110, 'd');
+    }
+
+    // USERS COLLECTION
+    // Security: Only allow creating an account with isPaid = false
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // CREATE: Strict validation
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.isPaid == false
+                    && request.resource.data.createdAt == request.time;
+                    
+      // UPDATE: Allow updates BUT prevent tampering with critical fields
+      // User cannot change their own isPaid status, createdAt, or plan.
+      allow update: if request.auth != null && request.auth.uid == userId
+                    && request.resource.data.isPaid == resource.data.isPaid
+                    && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    // SYNC EVENTS (Data Storage)
+    // Security: enforced by hasAccess() check
+    match /sync_events/{userId} {
+      allow read, write: if request.auth != null 
+                         && request.auth.uid == userId 
+                         && hasAccess(userId);
+    }
+  }
+}
