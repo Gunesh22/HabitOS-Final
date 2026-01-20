@@ -314,6 +314,7 @@ const HabitOSApp = () => {
       wrap: true // Default to text wrapping enabled
     };
     setNotes([newNote, ...notes]);
+    logEvent('NOTE_ADD', newNote);
   };
 
   const updateNote = (id, field, value) => {
@@ -329,6 +330,7 @@ const HabitOSApp = () => {
   const confirmDeleteNote = () => {
     if (noteToDelete) {
       setNotes(notes.filter(n => n.id !== noteToDelete));
+      logEvent('NOTE_DELETE', { id: noteToDelete });
       setNoteToDelete(null);
     }
   };
@@ -551,7 +553,13 @@ const HabitOSApp = () => {
               fontWeight: !isOnline || isSyncing ? 'bold' : 'normal',
               letterSpacing: '1px'
             }}>
-              {!isOnline ? '⚠ OFFLINE' : (isSyncing ? 'SYNCING...' : 'SYNCED')}
+              {!isOnline ? '⚠ OFFLINE' : (
+                isSyncing ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="spinner" /> SYNCING...
+                  </span>
+                ) : 'SYNCED'
+              )}
             </span>
             <button onClick={handleLogout} className="fancy-button" style={{ padding: '6px 12px', fontSize: '10px' }}>
               LOGOUT

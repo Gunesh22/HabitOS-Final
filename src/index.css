@@ -592,6 +592,17 @@ button.ql-underline:hover .ql-stroke {
   }
 }
 
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 255, 204, 0.2);
+  border-top: 2px solid #00ffcc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 /* Trial Banner */
 .trial-banner {
   position: fixed;
