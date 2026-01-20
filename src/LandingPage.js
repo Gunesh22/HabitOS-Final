@@ -1,85 +1,64 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { useAuth } from './contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 // import { doc, updateDoc } from 'firebase/firestore';
 // import { db } from './firebase'; // Import your firebase instance
 import './LandingPage.css';
 
-import './LandingPage.css';
-
 const LandingPage = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
 
-    // const config = {
-    //     trialDays: 110,
-    //     priceInr: 449, // Lifetime
-    //     priceUsd: 5
-    // };
-
-    const [toast, setToast] = useState(null);
-
-    const showToast = (msg) => {
-        setToast(msg);
-        setTimeout(() => setToast(null), 3000);
+    const config = {
+        trialDays: 110,
+        priceInr: 449, // Lifetime
+        priceUsd: 5
     };
 
-    const handleComingSoon = () => {
-        showToast("Payments Disabled: Launching Soon. Enjoy the Free Tier!");
+    const handlePaymentSuccess = async (paymentId) => {
+        // UI Feedback ONLY. The actual verification happens via Webhook on the backend.
+        // We do typically wait for the backend, but for UX we just say success.
+        alert(`Payment Initiated! ID: ${paymentId}. Your account will be upgraded momentarily.`);
+        navigate('/app');
     };
 
+    const handleRazorpayPayment = () => {
+        if (!currentUser) {
+            alert("Please log in or sign up first to attach the license to your account.");
+            navigate('/app'); // Redirect to Signup/Login
+            return;
+        }
 
+        if (!window.Razorpay) {
+            alert('Razorpay SDK not loaded. Please check your internet connection.');
+            return;
+        }
 
-    // const { currentUser } = useAuth();
+        const options = {
+            key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag", // Ensure this ENV is set in Vercel
+            amount: config.priceInr * 100,
+            currency: 'INR',
+            name: 'HabitOS',
+            description: 'Lifetime Access License',
+            image: '/logo512.png',
+            order_id: "", // For simple integration we rely on auto-capture. Ideally create order on backend.
+            handler: function (response) {
+                handlePaymentSuccess(response.razorpay_payment_id);
+            },
+            prefill: {
+                name: currentUser.displayName || '',
+                email: currentUser.email || '',
+                contact: ''
+            },
+            notes: {
+                userId: currentUser.uid // CRITICAL: This allows the backend to verify who paid
+            },
+            theme: { color: '#00ffcc' }
+        };
 
-    // const handlePaymentSuccess = async (paymentId) => {
-    //     alert(`Payment Successful! ID: ${paymentId}. Welcome to HabitOS Lifetime.`);
-
-    //     if (currentUser) {
-    //         try {
-    //             await updateDoc(doc(db, 'users', currentUser.uid), {
-    //                 isPaid: true,
-    //                 paymentId: paymentId,
-    //                 plan: 'LIFETIME'
-    //             });
-    //             console.log('User status upgraded to PAID');
-    //         } catch (error) {
-    //             console.error('Error upgrading user:', error);
-    //             alert('Payment recorded, but sync failed. Please contact support.');
-    //         }
-    //     } else {
-    //         console.warn("User not logged in during payment?");
-    //     }
-
-    //     navigate('/app');
-    // };
-
-    // const handleRazorpayPayment = () => {
-    //     if (!window.Razorpay) {
-    //         alert('Razorpay SDK not loaded. Please check your internet connection.');
-    //         return;
-    //     }
-
-    //     const options = {
-    //         key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
-    //         amount: config.priceInr * 100,
-    //         currency: 'INR',
-    //         name: 'HabitOS',
-    //         description: 'Lifetime Access',
-    //         image: '/logo512.png',
-    //         handler: function (response) {
-    //             handlePaymentSuccess(response.razorpay_payment_id);
-    //         },
-    //         prefill: {
-    //             name: '',
-    //             email: '',
-    //             contact: ''
-    //         },
-    //         theme: { color: '#00ffcc' }
-    //     };
-
-    //     const rzp = new window.Razorpay(options);
-    //     rzp.open();
-    // };
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+    };
 
     useEffect(() => {
         // Smooth scrolling for anchor links
@@ -348,7 +327,7 @@ const LandingPage = () => {
                                             <li>Early Access</li>
                                             <li>Priority Support</li>
                                         </ul>
-                                        <button onClick={handleComingSoon} className="btn btn-secondary">Buy Lifetime</button>
+                                        <button onClick={handleRazorpayPayment} className="btn btn-secondary">Buy Lifetime</button>
                                     </div>
                                     <div className="pricing-back">
                                         <h3>Lifetime</h3>
@@ -359,7 +338,7 @@ const LandingPage = () => {
                                             <li>Early Access</li>
                                             <li>Priority Support</li>
                                         </ul>
-                                        <button onClick={handleComingSoon} className="btn btn-secondary">Buy Lifetime</button>
+                                        <button onClick={handleRazorpayPayment} className="btn btn-secondary">Buy Lifetime</button>
                                     </div>
                                 </div>
                             </div>
