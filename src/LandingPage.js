@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase'; // Import your firebase instance
+// import { useAuth } from './contexts/AuthContext';
+// import { doc, updateDoc } from 'firebase/firestore';
+// import { db } from './firebase'; // Import your firebase instance
 import './LandingPage.css';
 
 import './LandingPage.css';
@@ -10,11 +10,11 @@ import './LandingPage.css';
 const LandingPage = () => {
     const navigate = useNavigate();
 
-    const [config, setConfig] = useState({
-        trialDays: 110,
-        priceInr: 449, // Lifetime
-        priceUsd: 5
-    });
+    // const config = {
+    //     trialDays: 110,
+    //     priceInr: 449, // Lifetime
+    //     priceUsd: 5
+    // };
 
     const [toast, setToast] = useState(null);
 
@@ -29,57 +29,57 @@ const LandingPage = () => {
 
 
 
-    const { currentUser } = useAuth();
+    // const { currentUser } = useAuth();
 
-    const handlePaymentSuccess = async (paymentId) => {
-        alert(`Payment Successful! ID: ${paymentId}. Welcome to HabitOS Lifetime.`);
+    // const handlePaymentSuccess = async (paymentId) => {
+    //     alert(`Payment Successful! ID: ${paymentId}. Welcome to HabitOS Lifetime.`);
 
-        if (currentUser) {
-            try {
-                await updateDoc(doc(db, 'users', currentUser.uid), {
-                    isPaid: true,
-                    paymentId: paymentId,
-                    plan: 'LIFETIME'
-                });
-                console.log('User status upgraded to PAID');
-            } catch (error) {
-                console.error('Error upgrading user:', error);
-                alert('Payment recorded, but sync failed. Please contact support.');
-            }
-        } else {
-            console.warn("User not logged in during payment?");
-        }
+    //     if (currentUser) {
+    //         try {
+    //             await updateDoc(doc(db, 'users', currentUser.uid), {
+    //                 isPaid: true,
+    //                 paymentId: paymentId,
+    //                 plan: 'LIFETIME'
+    //             });
+    //             console.log('User status upgraded to PAID');
+    //         } catch (error) {
+    //             console.error('Error upgrading user:', error);
+    //             alert('Payment recorded, but sync failed. Please contact support.');
+    //         }
+    //     } else {
+    //         console.warn("User not logged in during payment?");
+    //     }
 
-        navigate('/app');
-    };
+    //     navigate('/app');
+    // };
 
-    const handleRazorpayPayment = () => {
-        if (!window.Razorpay) {
-            alert('Razorpay SDK not loaded. Please check your internet connection.');
-            return;
-        }
+    // const handleRazorpayPayment = () => {
+    //     if (!window.Razorpay) {
+    //         alert('Razorpay SDK not loaded. Please check your internet connection.');
+    //         return;
+    //     }
 
-        const options = {
-            key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
-            amount: config.priceInr * 100,
-            currency: 'INR',
-            name: 'HabitOS',
-            description: 'Lifetime Access',
-            image: '/logo512.png',
-            handler: function (response) {
-                handlePaymentSuccess(response.razorpay_payment_id);
-            },
-            prefill: {
-                name: '',
-                email: '',
-                contact: ''
-            },
-            theme: { color: '#00ffcc' }
-        };
+    //     const options = {
+    //         key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
+    //         amount: config.priceInr * 100,
+    //         currency: 'INR',
+    //         name: 'HabitOS',
+    //         description: 'Lifetime Access',
+    //         image: '/logo512.png',
+    //         handler: function (response) {
+    //             handlePaymentSuccess(response.razorpay_payment_id);
+    //         },
+    //         prefill: {
+    //             name: '',
+    //             email: '',
+    //             contact: ''
+    //         },
+    //         theme: { color: '#00ffcc' }
+    //     };
 
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-    };
+    //     const rzp = new window.Razorpay(options);
+    //     rzp.open();
+    // };
 
     useEffect(() => {
         // Smooth scrolling for anchor links
@@ -132,7 +132,7 @@ const LandingPage = () => {
         <div className="landing-page">
             <header className="header">
                 <div className="container nav-container">
-                    <a href="#" className="logo">HabitOS</a>
+                    <a href="/" className="logo">HabitOS</a>
                     <nav className="nav">
                         <ul className="nav-list">
                             <li><a href="#features">Features</a></li>
@@ -392,23 +392,23 @@ const LandingPage = () => {
             <footer className="footer">
                 <div className="container footer-content">
                     <div className="footer-col">
-                        <a href="#" className="logo">HabitOS</a>
+                        <a href="/" className="logo">HabitOS</a>
                         <p>Copyright © 2026 HabitOS Inc.</p>
                     </div>
                     <div className="footer-col">
                         <h4>Product</h4>
-                        <a href="#">Features</a>
+                        <a href="/">Features</a>
                         <a href="#pricing">Pricing</a>
                     </div>
                     <div className="footer-col">
                         <h4>Company</h4>
-                        <a href="#">About</a>
-                        <a href="#">Blog</a>
+                        <a href="/">About</a>
+                        <a href="/">Blog</a>
                     </div>
                     <div className="footer-col">
                         <h4>Social</h4>
-                        <a href="#">Twitter</a>
-                        <a href="#">GitHub</a>
+                        <a href="/">Twitter</a>
+                        <a href="/">GitHub</a>
                     </div>
                 </div>
             </footer>

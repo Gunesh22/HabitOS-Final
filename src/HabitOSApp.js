@@ -37,13 +37,13 @@ const getTodayIndex = () => {
   return getDayIndex(new Date());
 };
 
-const generateHistory = () => {
-  const todayIndex = getTodayIndex();
-  return Array.from({ length: 365 }, (_, i) => {
-    if (i > todayIndex) return false;
-    return Math.random() > 0.4;
-  });
-};
+// const generateHistory = () => {
+//   const todayIndex = getTodayIndex();
+//   return Array.from({ length: 365 }, (_, i) => {
+//     if (i > todayIndex) return false;
+//     return Math.random() > 0.4;
+//   });
+// };
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -115,24 +115,7 @@ const HabitOSApp = () => {
   // --- NETWORK STATE ---
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      showToast('Connection restored. Syncing...', 'success');
-      if (currentUser) syncData(); // Auto sync
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-      showToast('Connection lost. Working offline.', 'error');
-    };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [currentUser]);
 
   // --- APP STATE ---
   // ... (existing state)
@@ -177,17 +160,18 @@ const HabitOSApp = () => {
     return [];
   });
 
-  // --- INITIAL SYNC ON MOUNT ---
-  useEffect(() => {
-    if (currentUser) {
-      syncData();
-    }
-  }, [currentUser]);
+  // --- REFS FOR SYNC DATA ---
+  const habitsRef = React.useRef(habits);
+  const notesRef = React.useRef(notes);
+
+  useEffect(() => { habitsRef.current = habits; }, [habits]);
+  useEffect(() => { notesRef.current = notes; }, [notes]);
 
   // Sync Function
-  const syncData = async () => {
+  const syncData = React.useCallback(async () => {
     setIsSyncing(true);
-    const updates = await pullEvents(currentUser.uid, habits, notes);
+    // Use refs to get latest state without adding them to dependencies
+    const updates = await pullEvents(currentUser.uid, habitsRef.current, notesRef.current);
     if (updates) {
       if (updates.habits) setHabits(updates.habits);
       if (updates.notes) setNotes(updates.notes);
@@ -196,10 +180,37 @@ const HabitOSApp = () => {
     await pushEvents(currentUser.uid);
 
     // Attempt snapshot (garbage collection)
-    performSnapshot(currentUser.uid, habits, notes);
+    performSnapshot(currentUser.uid, habitsRef.current, notesRef.current);
 
     setIsSyncing(false);
-  };
+  }, [currentUser]);
+
+  // --- INITIAL SYNC ON MOUNT ---
+  useEffect(() => {
+    if (currentUser) {
+      syncData();
+    }
+  }, [currentUser, syncData]);
+
+  // --- NETWORK LISTENERS ---
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      showToast('Connection restored. Syncing...', 'success');
+      if (currentUser) syncData(); // Auto sync
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToast('Connection lost. Working offline.', 'error');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [currentUser, syncData]);
 
   const handleLogout = async () => {
     // Safety Check: Attempt one final sync if online
@@ -378,7 +389,7 @@ const HabitOSApp = () => {
   };
 
   // --- VIEW LOGIC ---
-  const getVisibleRange = (mode) => {
+  const getVisibleRange = React.useCallback((mode) => {
     if (mode === 'week') {
       // 2026 Jan 1 is Thursday. Offset -3 gives us Monday Dec 29 2025 as base of Week 0.
       const mondayIndex = (selectedWeek * 7) - 3;
@@ -398,7 +409,7 @@ const HabitOSApp = () => {
       return { start: 0, end: 365 };
     }
     return { start: 0, end: 365 };
-  };
+  }, [selectedWeek, selectedMonth]);
 
   const getVisibleData = (history, mode) => {
     const { start, end } = getVisibleRange(mode);
@@ -464,7 +475,7 @@ const HabitOSApp = () => {
       percentage,
       maxStreak
     };
-  }, [selectedHabit, viewMode, selectedMonth, selectedWeek]);
+  }, [selectedHabit, viewMode, getVisibleRange]);
 
   function inputPercentage(partialValue, totalValue) {
     if (totalValue === 0) return 0;

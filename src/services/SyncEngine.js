@@ -11,7 +11,7 @@ import { doc, getDoc, setDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/
  * 4. Pull events from Firestore and merge (Lazy Reads).
  */
 
-const SYNC_KEY = 'habitos_sync_events';
+// const SYNC_KEY = 'habitos_sync_events';
 const LAST_SYNC_TIME_KEY = 'habitos_last_sync_time';
 const DEVICE_ID_KEY = 'habitos_device_id';
 const PENDING_EVENTS_KEY = 'habitos_pending_events_queue';
