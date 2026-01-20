@@ -561,6 +561,7 @@ const HabitOSApp = () => {
           {/* Module Switcher */}
           <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', padding: '5px', borderRadius: '50px', marginBottom: '30px' }}>
             <button
+              onClick={() => setActiveTab('habits')}
               style={{
                 background: activeTab === 'habits' ? '#00ffcc' : 'transparent',
                 color: activeTab === 'habits' ? '#000' : '#fff',

@@ -25,7 +25,11 @@ const Signup = () => {
             await signupUser(email, password);
             navigate('/app');
         } catch (err) {
-            setError('Failed to create account. ' + err.message);
+            if (err.code === 'auth/email-already-in-use') {
+                setError('This email is already registered. Please log in.');
+            } else {
+                setError('Failed to create account. ' + err.message);
+            }
         }
         setLoading(false);
     };
