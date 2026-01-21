@@ -299,7 +299,7 @@ const LandingPage = () => {
                                             <li>Cloud Sync (3 Devices)</li>
                                             <li>110 Days Free Trial</li>
                                         </ul>
-                                        <button onClick={handleComingSoon} className="btn btn-primary">Start Free Trial</button>
+                                        <button onClick={goToApp} className="btn btn-primary">Start Free Trial</button>
                                     </div>
                                     <div className="pricing-back">
                                         <div className="popular-tag">Most Popular</div>
@@ -312,7 +312,7 @@ const LandingPage = () => {
                                             <li>Cloud Sync (3 Devices)</li>
                                             <li>110 Days Free Trial</li>
                                         </ul>
-                                        <button onClick={handleComingSoon} className="btn btn-primary">Start Free Trial</button>
+                                        <button onClick={goToApp} className="btn btn-primary">Start Free Trial</button>
                                     </div>
                                 </div>
                             </div>
@@ -347,15 +347,7 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                {toast && (
-                    <div style={{
-                        position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
-                        background: '#000', border: '1px solid #00ffcc', color: '#00ffcc',
-                        padding: '12px 24px', borderRadius: '50px', zIndex: 1000, fontSize: '14px'
-                    }}>
-                        {toast}
-                    </div>
-                )}
+
 
                 <section id="cta" className="cta-section">
                     <div className="container">
