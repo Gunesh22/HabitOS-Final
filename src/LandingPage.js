@@ -291,7 +291,7 @@ const LandingPage = () => {
                                     <div className="pricing-front">
                                         <div className="popular-tag">Most Popular</div>
                                         <h3>Pro</h3>
-                                        <div className="price">$1<span>/life</span></div>
+                                        <div className="price">$1<span>/mo</span></div>
                                         <p>For power users.</p>
                                         <ul className="pricing-features">
                                             <li>Unlimited Habits</li>
@@ -304,7 +304,7 @@ const LandingPage = () => {
                                     <div className="pricing-back">
                                         <div className="popular-tag">Most Popular</div>
                                         <h3>Pro</h3>
-                                        <div className="price">₹85<span>/life</span></div>
+                                        <div className="price">₹85<span>/mo</span></div>
                                         <p>For power users.</p>
                                         <ul className="pricing-features">
                                             <li>Unlimited Habits</li>
