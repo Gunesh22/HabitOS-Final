@@ -336,20 +336,37 @@ const HabitOSApp = () => {
   };
 
   // --- HABIT ACTIONS ---
-  const addHabit = (e) => {
+  // --- PROTOCOL INITIATION (The Vow) ---
+  const [pendingProtocolName, setPendingProtocolName] = useState(null);
+  const [protocolVow, setProtocolVow] = useState('');
+
+  const initiateProtocol = (e) => {
     e.preventDefault();
     if (!newHabitName.trim()) return;
+    setPendingProtocolName(newHabitName);
+  };
+
+  const confirmProtocol = () => {
+    if (!protocolVow.trim()) return;
 
     const newHabit = {
       id: Date.now(),
-      name: newHabitName,
+      name: pendingProtocolName,
+      vow: protocolVow, // The binding promise
       streak: 0,
       history: new Array(365).fill(false)
     };
 
     setHabits([...habits, newHabit]);
     setNewHabitName('');
+    setPendingProtocolName(null);
+    setProtocolVow('');
     logEvent('HABIT_ADD', newHabit);
+  };
+
+  const cancelProtocol = () => {
+    setPendingProtocolName(null);
+    setProtocolVow('');
   };
 
 
@@ -601,7 +618,7 @@ const HabitOSApp = () => {
           </div>
 
           {activeTab === 'habits' && (
-            <form onSubmit={addHabit} style={{ display: 'flex', alignItems: 'center' }}>
+            <form onSubmit={initiateProtocol} style={{ display: 'flex', alignItems: 'center' }}>
               <input
                 type="text"
                 className="fancy-input"
@@ -762,6 +779,32 @@ const HabitOSApp = () => {
             </SortableContext>
           )}
         </DndContext>
+
+        {/* Habit Details Modal */}
+        {/* --- VOW MODAL --- */}
+        {pendingProtocolName && (
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', borderColor: '#00ffcc', boxShadow: '0 0 30px rgba(0,255,204,0.1)' }}>
+              <h3 style={{ color: '#00ffcc', letterSpacing: '2px' }}>ESTABLISH INTENT</h3>
+              <p style={{ opacity: 0.7, marginBottom: '20px', fontSize: '14px' }}>
+                To whom do you bind this promise? <br />
+                Who do you become by doing this?
+              </p>
+              <input
+                className="fancy-input"
+                style={{ width: '90%', marginBottom: '20px', padding: '15px' }}
+                placeholder="I bind myself to this because..."
+                value={protocolVow}
+                onChange={e => setProtocolVow(e.target.value)}
+                autoFocus
+              />
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button className="fancy-button" onClick={confirmProtocol}>CONFIRM VOW</button>
+                <button className="fancy-button" style={{ borderColor: '#ff4444', color: '#ff4444' }} onClick={cancelProtocol}>CANCEL</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Habit Details Modal */}
         {selectedHabit && currentMetrics && (
