@@ -127,12 +127,15 @@ const LandingPage = () => {
                 <section className="hero">
                     <div className="container hero-content">
                         <div className="hero-text-wrapper">
-                            <span className="badge">v2.0 Now Available</span>
-                            <h1 className="hero-title">Rewire Your <span className="text-gradient">Digital Life</span></h1>
-                            <p className="hero-subtitle">The seamless operating system for your habits. Minimalist, powerful, and designed for focus. <br /> Track what matters, stay consistent, and grow—one day at a time.</p>
+                            <span className="badge">Voluntary Seriousness</span>
+                            <h1 className="hero-title">The Integrity System for the <span className="text-gradient">Self-Governed</span></h1>
+                            <p className="hero-subtitle">
+                                For those with no boss, no grades, and no deadlines.<br />
+                                A voluntary self-binding system for people who choose difficult paths.
+                            </p>
                             <div className="hero-btns">
-                                <button onClick={goToApp} className="btn btn-primary">Launch Web App</button>
-                                <a href="#features" className="btn btn-secondary">Explore Features</a>
+                                <button onClick={goToApp} className="btn btn-primary">Enter Protocol</button>
+                                <a href="#manifesto" className="btn btn-secondary">Read the Manifesto</a>
                             </div>
                         </div>
                         {/* Hero Visual */}
@@ -144,8 +147,8 @@ const LandingPage = () => {
                                 <div className="orb-core">
                                     <div className="glass-panel">
                                         <div className="stat-row">
-                                            <span className="label">Flow State</span>
-                                            <span className="value">Active</span>
+                                            <span className="label">Integrity State</span>
+                                            <span className="value">Locked</span>
                                         </div>
                                         <div className="pulsing-dot"></div>
                                     </div>
@@ -156,96 +159,76 @@ const LandingPage = () => {
                     <div className="glow-effect"></div>
                 </section>
 
-                <section id="features" className="features">
+                <section id="manifesto" className="features">
                     <div className="container">
                         <div className="section-header">
-                            <h2>Designed for <span className="text-gradient">Flow</span></h2>
-                            <p>Every interaction is crafted to keep you in the zone.</p>
+                            <h2>Who This Is <span className="text-gradient">For</span></h2>
+                            <p>This product is not for everyone. That is a feature, not a flaw.</p>
                         </div>
                         <div className="features-grid">
                             <div className="feature-card">
-                                <div className="icon-box">⚡</div>
-                                <h3>Lightning Fast</h3>
-                                <p>Zero latency interactions. Built for speed so you never lose your train of thought.</p>
+                                <div className="icon-box">🏹</div>
+                                <h3>The Archetype</h3>
+                                <p>Solo founders, Indie hackers, Athletes training alone, and spiritual practitioners. People who fail silently and late.</p>
                             </div>
                             <div className="feature-card">
-                                <div className="icon-box">🌑</div>
-                                <h3>True Dark Mode</h3>
-                                <p>Easy on the eyes, perfect for late-night planning sessions.</p>
+                                <div className="icon-box">⚖️</div>
+                                <h3>Why You Pay</h3>
+                                <p>Not for software. You pay because you respect systems that demand honesty. Consistency is your livelihood and identity.</p>
                             </div>
                             <div className="feature-card">
-                                <div className="icon-box">🔄</div>
-                                <h3>Streaks & Goals</h3>
-                                <p>Track every habit daily, maintain streaks and leap towards your goals.</p>
+                                <div className="icon-box">🧱</div>
+                                <h3>Structure, Not Motivation</h3>
+                                <p>You don't need a cheerleader. You need a framework that respects your seriousness.</p>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section id="stories" className="stories">
+                <section id="principles" className="stories">
                     <div className="container">
                         <div className="section-header">
-                            <h2>Success <span className="text-gradient">Stories</span></h2>
-                            <p>See how HabitOS changes lives.</p>
+                            <h2>Non-Negotiable <span className="text-gradient">Rules</span></h2>
+                            <p>We reject gamification. We embrace friction.</p>
                         </div>
-                        <div className="stories-marquee">
-                            <div className="marquee-track">
-                                {/* Set 1 */}
-                                <div className="story-card">
-                                    <p className="quote">"I finally managed to build a consistent meditation habit. The interface just gets out of the way."</p>
-                                    <div className="author">
-                                        <span className="name">Sarah J.</span>
-                                        <span className="role">Designer</span>
+
+                        <div className="features-grid" style={{ marginTop: '40px' }}>
+                            <div className="pricing-card" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                                <div className="pricing-card-inner">
+                                    <div className="pricing-front" style={{ textAlign: 'left', padding: '30px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Friction to Quit</h3>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Instant quitting encourages impulse escape. We force you to pause, reflect, and confirm. Conscious disengagement respects your autonomy.</p>
+                                    </div>
+                                    {/* Back intentionally same for effect if hovered */}
+                                    <div className="pricing-back" style={{ textAlign: 'left', padding: '30px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Friction to Quit</h3>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Instant quitting encourages impulse escape. We force you to pause, reflect, and confirm. Conscious disengagement respects your autonomy.</p>
                                     </div>
                                 </div>
-                                <div className="story-card">
-                                    <p className="quote">"Productivity apps usually stress me out. HabitOS actually helps me focus."</p>
-                                    <div className="author">
-                                        <span className="name">Mike T.</span>
-                                        <span className="role">Developer</span>
+                            </div>
+
+                            <div className="pricing-card" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                                <div className="pricing-card-inner">
+                                    <div className="pricing-front" style={{ textAlign: 'left', padding: '30px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Chosen Witnesses</h3>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Fully private leads to self-deception. Fully public leads to performance. We offer opt-in visibility for 1-3 trusted witnesses.</p>
+                                    </div>
+                                    <div className="pricing-back" style={{ textAlign: 'left', padding: '30px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Chosen Witnesses</h3>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Fully private leads to self-deception. Fully public leads to performance. We offer opt-in visibility for 1-3 trusted witnesses.</p>
                                     </div>
                                 </div>
-                                <div className="story-card">
-                                    <p className="quote">"Simple, beautiful, and effective. The best habit tracker I've used."</p>
-                                    <div className="author">
-                                        <span className="name">Elena R.</span>
-                                        <span className="role">Writer</span>
+                            </div>
+
+                            <div className="pricing-card" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                                <div className="pricing-card-inner">
+                                    <div className="pricing-front" style={{ textAlign: 'left', padding: '30px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Integrity Drift</h3>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>We don't predict "dropouts." We detect weakening commitment to help you reset. The system protects you from yourself, not against you.</p>
                                     </div>
-                                </div>
-                                <div className="story-card">
-                                    <p className="quote">"The dark mode is stunning. I use it every night for my journaling routine."</p>
-                                    <div className="author">
-                                        <span className="name">David K.</span>
-                                        <span className="role">Artist</span>
-                                    </div>
-                                </div>
-                                {/* Set 2 (Duplicate for infinite scroll) */}
-                                <div className="story-card">
-                                    <p className="quote">"I finally managed to build a consistent meditation habit. The interface just gets out of the way."</p>
-                                    <div className="author">
-                                        <span className="name">Sarah J.</span>
-                                        <span className="role">Designer</span>
-                                    </div>
-                                </div>
-                                <div className="story-card">
-                                    <p className="quote">"Productivity apps usually stress me out. HabitOS actually helps me focus."</p>
-                                    <div className="author">
-                                        <span className="name">Mike T.</span>
-                                        <span className="role">Developer</span>
-                                    </div>
-                                </div>
-                                <div className="story-card">
-                                    <p className="quote">"Simple, beautiful, and effective. The best habit tracker I've used."</p>
-                                    <div className="author">
-                                        <span className="name">Elena R.</span>
-                                        <span className="role">Writer</span>
-                                    </div>
-                                </div>
-                                <div className="story-card">
-                                    <p className="quote">"The dark mode is stunning. I use it every night for my journaling routine."</p>
-                                    <div className="author">
-                                        <span className="name">David K.</span>
-                                        <span className="role">Artist</span>
+                                    <div className="pricing-back" style={{ textAlign: 'left', padding: '30px' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Integrity Drift</h3>
+                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>We don't predict "dropouts." We detect weakening commitment to help you reset. The system protects you from yourself, not against you.</p>
                                     </div>
                                 </div>
                             </div>
@@ -256,54 +239,54 @@ const LandingPage = () => {
                 <section id="pricing" className="pricing">
                     <div className="container">
                         <div className="section-header">
-                            <h2>Simple <span className="text-gradient">Pricing</span></h2>
-                            <p>Invest in your productivity.</p>
+                            <h2>Commitment <span className="text-gradient">Pricing</span></h2>
+                            <p>Invest in your word.</p>
                         </div>
                         <div className="pricing-grid">
                             <div className="pricing-card">
                                 <div className="pricing-card-inner">
                                     <div className="pricing-front">
-                                        <h3>Free</h3>
+                                        <h3>Visitor</h3>
                                         <div className="price">$0<span>/mo</span></div>
-                                        <p>For essential habit tracking.</p>
+                                        <p>To understand the philosophy.</p>
                                         <ul className="pricing-features">
-                                            <li>3 Habits</li>
-                                            <li>Basic Stats</li>
+                                            <li>3 Protocols</li>
                                             <li>Local Storage</li>
+                                            <li>Manual Integrity Checks</li>
                                         </ul>
-                                        <button onClick={goToApp} className="btn btn-secondary">Launch Free</button>
+                                        <button onClick={goToApp} className="btn btn-secondary">Enter</button>
                                     </div>
                                     <div className="pricing-back">
-                                        <h3>Free</h3>
+                                        <h3>Visitor</h3>
                                         <div className="price">₹0<span>/mo</span></div>
-                                        <p>For essential habit tracking.</p>
+                                        <p>To understand the philosophy.</p>
                                         <ul className="pricing-features">
-                                            <li>3 Habits</li>
-                                            <li>Basic Stats</li>
+                                            <li>3 Protocols</li>
                                             <li>Local Storage</li>
+                                            <li>Manual Integrity Checks</li>
                                         </ul>
-                                        <button onClick={goToApp} className="btn btn-secondary">Launch Free</button>
+                                        <button onClick={goToApp} className="btn btn-secondary">Enter</button>
                                     </div>
                                 </div>
                             </div>
                             <div className="pricing-card featured">
                                 <div className="pricing-card-inner">
                                     <div className="pricing-front">
-                                        <div className="popular-tag">Most Popular</div>
-                                        <h3>Pro</h3>
+                                        <div className="popular-tag">Recommended</div>
+                                        <h3>Practitioner</h3>
                                         <div className="price">$1<span>/mo</span></div>
-                                        <p>For power users.</p>
+                                        <p>For sustainable growth.</p>
                                         <ul className="pricing-features">
-                                            <li>Unlimited Habits</li>
-                                            <li>Advanced Analytics</li>
+                                            <li>Unlimited Protocols</li>
+                                            <li>Integrity Drift Analytics</li>
                                             <li>Cloud Sync (3 Devices)</li>
                                             <li>110 Days Free Trial</li>
                                         </ul>
-                                        <button onClick={goToApp} className="btn btn-primary">Start Free Trial</button>
+                                        <button onClick={goToApp} className="btn btn-primary">Start Trial</button>
                                     </div>
                                     <div className="pricing-back">
-                                        <div className="popular-tag">Most Popular</div>
-                                        <h3>Pro</h3>
+                                        <div className="popular-tag">Recommended</div>
+                                        <h3>Practitioner</h3>
                                         <div className="price">₹85<span>/mo</span></div>
                                         <p>For power users.</p>
                                         <ul className="pricing-features">
