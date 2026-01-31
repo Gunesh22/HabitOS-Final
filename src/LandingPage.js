@@ -228,17 +228,17 @@ const LandingPage = () => {
                         </div>
                         <div className="features-grid">
                             <div className="feature-card">
-                                <div className="icon-box">🏹</div>
+                                <div className="icon-box"><span role="img" aria-label="Target">🏹</span></div>
                                 <h3>The Archetype</h3>
                                 <p>Solo founders, Indie hackers, Athletes training alone, and spiritual practitioners. People who fail silently and late.</p>
                             </div>
                             <div className="feature-card">
-                                <div className="icon-box">⚖️</div>
+                                <div className="icon-box"><span role="img" aria-label="Balance Scale">⚖️</span></div>
                                 <h3>Why You Pay</h3>
                                 <p>Not for software. You pay because you respect systems that demand honesty. Consistency is your livelihood and identity.</p>
                             </div>
                             <div className="feature-card">
-                                <div className="icon-box">🧱</div>
+                                <div className="icon-box"><span role="img" aria-label="Bricks">🧱</span></div>
                                 <h3>Structure, Not Motivation</h3>
                                 <p>You don't need a cheerleader. You need a framework that respects your seriousness.</p>
                             </div>
@@ -380,6 +380,33 @@ const LandingPage = () => {
                 </section>
 
 
+
+                <section id="faq" className="faq-section">
+                    <div className="container">
+                        <div className="section-header">
+                            <h2>Common <span className="text-gradient">Questions</span></h2>
+                            <p>For the curious and the skeptical.</p>
+                        </div>
+                        <div className="faq-grid">
+                            <div className="faq-item">
+                                <h3>Who is HabitOS for?</h3>
+                                <p>It is for the self-governed: solo founders, athletes, and high performers who operate without external supervision.</p>
+                            </div>
+                            <div className="faq-item">
+                                <h3>Is there a mobile app?</h3>
+                                <p>HabitOS is a Progressive Web App (PWA). You can install it on iOS and Android directly from your browser for a native-like experience.</p>
+                            </div>
+                            <div className="faq-item">
+                                <h3>How does "Integrity Drift" work?</h3>
+                                <p>We monitor your consistency. If you miss protocols repeatedly, the system detects a drift in your commitments and prompts a reset.</p>
+                            </div>
+                            <div className="faq-item">
+                                <h3>Why "Voluntary Seriousness"?</h3>
+                                <p>It means choosing to be strict with yourself not because you have to, but because you want to. We build software for that mindset.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 <section id="cta" className="cta-section">
                     <div className="container">
