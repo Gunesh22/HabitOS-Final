@@ -16,16 +16,59 @@ const LandingPage = () => {
     };
 
     const handlePaymentSuccess = async (paymentId) => {
-        // UI Feedback ONLY. The actual verification happens via Webhook on the backend.
-        // We do typically wait for the backend, but for UX we just say success.
-        alert(`Payment Initiated! ID: ${paymentId}. Your account will be upgraded momentarily.`);
-        navigate('/app');
+        if (!currentUser) {
+            alert('Error: User session lost. Please refresh and try again.');
+            return;
+        }
+
+        // Show loading state
+        const loadingAlert = document.createElement('div');
+        loadingAlert.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#000;color:#00ffcc;padding:30px;border:2px solid #00ffcc;z-index:99999;text-align:center;';
+        loadingAlert.innerHTML = '<div class="spinner"></div><div style="font-size:18px;margin-bottom:10px;display:inline-block;">Verifying Payment...</div><div style="font-size:14px;opacity:0.7;">Please wait, do not close this page</div>';
+        document.body.appendChild(loadingAlert);
+
+        try {
+            // Poll Firestore to check if webhook updated isPaid status
+            const { doc, getDoc } = await import('firebase/firestore');
+            const { db } = await import('./firebase');
+
+            const maxAttempts = 30; // 30 seconds max wait
+            let attempts = 0;
+
+            while (attempts < maxAttempts) {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+
+                if (userDoc.exists() && userDoc.data().isPaid === true) {
+                    // Payment verified!
+                    document.body.removeChild(loadingAlert);
+                    alert('✅ Payment verified! Welcome to HabitOS Premium.');
+                    navigate('/app');
+                    return;
+                }
+
+                // Wait 1 second before next check
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                attempts++;
+            }
+
+            // Timeout - payment not verified
+            document.body.removeChild(loadingAlert);
+            alert('⚠️ Payment verification timeout. Your payment is processing. Please check your email or contact support with Payment ID: ' + paymentId);
+            navigate('/app'); // Let them in anyway, they'll see trial status
+
+        } catch (error) {
+            document.body.removeChild(loadingAlert);
+            console.error('Payment verification error:', error);
+            alert('⚠️ Could not verify payment. Please contact support with Payment ID: ' + paymentId);
+            navigate('/app');
+        }
     };
 
-    const handleRazorpayPayment = () => {
+
+    const handleRazorpayPayment = async () => {
         if (!currentUser) {
             alert("Please log in or sign up first to attach the license to your account.");
-            navigate('/app'); // Redirect to Signup/Login
+            navigate('/app');
             return;
         }
 
@@ -34,30 +77,48 @@ const LandingPage = () => {
             return;
         }
 
-        const options = {
-            key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag", // Ensure this ENV is set in Vercel
-            amount: config.priceInr * 100,
-            currency: 'INR',
-            name: 'HabitOS',
-            description: 'Lifetime Access License',
-            image: '/logo512.png',
-            order_id: "", // For simple integration we rely on auto-capture. Ideally create order on backend.
-            handler: function (response) {
-                handlePaymentSuccess(response.razorpay_payment_id);
-            },
-            prefill: {
-                name: currentUser.displayName || '',
-                email: currentUser.email || '',
-                contact: ''
-            },
-            notes: {
-                userId: currentUser.uid // CRITICAL: This allows the backend to verify who paid
-            },
-            theme: { color: '#00ffcc' }
-        };
+        try {
+            // Create order on backend with server-side price validation
+            const response = await fetch('/api/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.uid })
+            });
 
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+            if (!response.ok) {
+                throw new Error('Failed to create order');
+            }
+
+            const { orderId, amount, currency } = await response.json();
+
+            const options = {
+                key: process.env.REACT_APP_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
+                amount: amount, // Amount from backend (cannot be manipulated)
+                currency: currency,
+                name: 'HabitOS',
+                description: 'Lifetime Access License',
+                image: '/logo512.png',
+                order_id: orderId, // Order created on backend
+                handler: function (response) {
+                    handlePaymentSuccess(response.razorpay_payment_id);
+                },
+                prefill: {
+                    name: currentUser.displayName || '',
+                    email: currentUser.email || '',
+                    contact: ''
+                },
+                notes: {
+                    userId: currentUser.uid
+                },
+                theme: { color: '#00ffcc' }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            console.error('Payment initiation error:', error);
+            alert('Failed to initiate payment. Please try again.');
+        }
     };
 
     useEffect(() => {
@@ -193,46 +254,34 @@ const LandingPage = () => {
                         </div>
 
                         <div className="features-grid" style={{ marginTop: '40px' }}>
-                            <div className="pricing-card" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-                                <div className="pricing-card-inner">
-                                    <div className="pricing-front" style={{ textAlign: 'left', padding: '30px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Friction to Quit</h3>
-                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Instant quitting encourages impulse escape. We force you to pause, reflect, and confirm. Conscious disengagement respects your autonomy.</p>
-                                    </div>
-                                    {/* Back intentionally same for effect if hovered */}
-                                    <div className="pricing-back" style={{ textAlign: 'left', padding: '30px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Friction to Quit</h3>
-                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Instant quitting encourages impulse escape. We force you to pause, reflect, and confirm. Conscious disengagement respects your autonomy.</p>
-                                    </div>
-                                </div>
+                            <div className="feature-card" style={{ padding: '30px', textAlign: 'left' }}>
+                                <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Friction to Quit</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Instant quitting encourages impulse escape. We force you to pause, reflect, and confirm. Conscious disengagement respects your autonomy.</p>
                             </div>
 
-                            <div className="pricing-card" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-                                <div className="pricing-card-inner">
-                                    <div className="pricing-front" style={{ textAlign: 'left', padding: '30px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Chosen Witnesses</h3>
-                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Fully private leads to self-deception. Fully public leads to performance. We offer opt-in visibility for 1-3 trusted witnesses.</p>
-                                    </div>
-                                    <div className="pricing-back" style={{ textAlign: 'left', padding: '30px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Chosen Witnesses</h3>
-                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Fully private leads to self-deception. Fully public leads to performance. We offer opt-in visibility for 1-3 trusted witnesses.</p>
-                                    </div>
-                                </div>
+                            <div className="feature-card" style={{ padding: '30px', textAlign: 'left' }}>
+                                <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Chosen Witnesses</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Fully private leads to self-deception. Fully public leads to performance. We offer opt-in visibility for 1-3 trusted witnesses.</p>
                             </div>
 
-                            <div className="pricing-card" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-                                <div className="pricing-card-inner">
-                                    <div className="pricing-front" style={{ textAlign: 'left', padding: '30px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Integrity Drift</h3>
-                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>We don't predict "dropouts." We detect weakening commitment to help you reset. The system protects you from yourself, not against you.</p>
-                                    </div>
-                                    <div className="pricing-back" style={{ textAlign: 'left', padding: '30px' }}>
-                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Integrity Drift</h3>
-                                        <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>We don't predict "dropouts." We detect weakening commitment to help you reset. The system protects you from yourself, not against you.</p>
-                                    </div>
-                                </div>
+                            <div className="feature-card" style={{ padding: '30px', textAlign: 'left' }}>
+                                <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Integrity Drift</h3>
+                                <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>We don't detect "dropouts." We detect weakening commitment to help you reset. The system protects you from yourself, not against you.</p>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                {/* Manifesto Quote */}
+                {/* Manifesto Quote */}
+                <section className="manifesto-quote-section">
+                    <div className="manifesto-container">
+                        <blockquote className="manifesto-text">
+                            "The system protects you from yourself,<br />not against you."
+                        </blockquote>
+                        <cite className="manifesto-author" style={{ display: 'block', fontStyle: 'normal' }}>
+                            — THE MANIFESTO
+                        </cite>
                     </div>
                 </section>
 
@@ -280,7 +329,7 @@ const LandingPage = () => {
                                             <li>Unlimited Protocols</li>
                                             <li>Integrity Drift Analytics</li>
                                             <li>Cloud Sync (3 Devices)</li>
-                                            <li>110 Days Free Trial</li>
+
                                         </ul>
                                         <button onClick={goToApp} className="btn btn-primary">Start Trial</button>
                                     </div>
@@ -293,7 +342,7 @@ const LandingPage = () => {
                                             <li>Unlimited Habits</li>
                                             <li>Advanced Analytics</li>
                                             <li>Cloud Sync (3 Devices)</li>
-                                            <li>110 Days Free Trial</li>
+
                                         </ul>
                                         <button onClick={goToApp} className="btn btn-primary">Start Free Trial</button>
                                     </div>
